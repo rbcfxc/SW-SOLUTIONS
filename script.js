@@ -4,6 +4,25 @@
    ========================================================= */
 
 /* ---------------------------------------------------------
+   0. Legacy hash redirect shim
+   Redirects old single-page hash links (#niches, #addons,
+   #services, #consultation, #tender-bundle) to clean URLs.
+   --------------------------------------------------------- */
+(function redirectLegacyHash() {
+  const hash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+  const map = {
+    niches: './store-niches/',
+    addons: './add-ons/',
+    services: './company-consultation/',
+    consultation: './company-consultation/',
+    'tender-bundle': './company-consultation/#tender-readiness',
+  };
+  if (map[hash] && !/\/(store-niches|add-ons|company-consultation)\//.test(window.location.pathname)) {
+    window.location.replace(map[hash]);
+  }
+})();
+
+/* ---------------------------------------------------------
    1. CONFIG: edit these values to update the site
    --------------------------------------------------------- */
 const CONFIG = {
@@ -55,12 +74,12 @@ const SERVICE_PRICES = {
   companyLetterhead: 150,
 };
 
-/** Note shown on the Company Consultation view, the cart and the WhatsApp order */
+/** Note shown on the Company Consultation page, the cart and the WhatsApp order */
 const GOV_FEES_NOTE = 'Government/statutory fees are separate from our service fees unless specifically stated and are paid directly to the relevant authority.';
 
 /* ---------------------------------------------------------
    2. PRODUCTS: every product & price lives here.
-   category: 'package' | 'niche' | 'addon'
+   category: 'package' | 'niche' | 'addon' | 'service'
    unit (optional): shown after the price, e.g. '/month'
    --------------------------------------------------------- */
 const PRODUCTS = [
@@ -285,14 +304,14 @@ const PRODUCTS = [
   },
 
   // Group: "cipc" (Additional CIPC Services price-list rows)
-  { id: 'svc-cipc-director',  category: 'service', group: 'cipc', name: 'Director Changes',                 price: SERVICE_PRICES.directorChanges },
-  { id: 'svc-cipc-address',   category: 'service', group: 'cipc', name: 'Company Address Change',           price: SERVICE_PRICES.addressChange },
-  { id: 'svc-cipc-contact',   category: 'service', group: 'cipc', name: 'Contact Details Update',           price: SERVICE_PRICES.contactUpdate },
-  { id: 'svc-cipc-fye',       category: 'service', group: 'cipc', name: 'Financial Year-End Change',        price: SERVICE_PRICES.fyeChange },
-  { id: 'svc-cipc-nameres',   category: 'service', group: 'cipc', name: 'Company Name Reservation',         price: SERVICE_PRICES.nameReservation },
-  { id: 'svc-cipc-namechg',   category: 'service', group: 'cipc', name: 'Company Name Change',              price: SERVICE_PRICES.nameChange },
+  { id: 'svc-cipc-director',  category: 'service', group: 'cipc', name: 'Director Changes',                  price: SERVICE_PRICES.directorChanges },
+  { id: 'svc-cipc-address',   category: 'service', group: 'cipc', name: 'Company Address Change',            price: SERVICE_PRICES.addressChange },
+  { id: 'svc-cipc-contact',   category: 'service', group: 'cipc', name: 'Contact Details Update',            price: SERVICE_PRICES.contactUpdate },
+  { id: 'svc-cipc-fye',       category: 'service', group: 'cipc', name: 'Financial Year-End Change',         price: SERVICE_PRICES.fyeChange },
+  { id: 'svc-cipc-nameres',   category: 'service', group: 'cipc', name: 'Company Name Reservation',          price: SERVICE_PRICES.nameReservation },
+  { id: 'svc-cipc-namechg',   category: 'service', group: 'cipc', name: 'Company Name Change',               price: SERVICE_PRICES.nameChange },
   { id: 'svc-cipc-dereg',     category: 'service', group: 'cipc', name: 'Company Deregistration Assistance', price: SERVICE_PRICES.deregistration },
-  { id: 'svc-cipc-reinstate', category: 'service', group: 'cipc', name: 'Company Reinstatement Assistance', price: SERVICE_PRICES.reinstatement, from: true },
+  { id: 'svc-cipc-reinstate', category: 'service', group: 'cipc', name: 'Company Reinstatement Assistance',  price: SERVICE_PRICES.reinstatement, from: true },
 
   // Group: "support" (Business Support Services price-list rows)
   { id: 'svc-sup-profile',    category: 'service', group: 'support', name: 'Professional Company Profile', price: SERVICE_PRICES.companyProfile, from: true },
@@ -328,6 +347,8 @@ function whatsappLink(message) {
 
 /* ---------------------------------------------------------
    4. Render products from the PRODUCTS array
+   Each render function only runs if its container exists on
+   the current page.
    --------------------------------------------------------- */
 function renderPackages() {
   const grid = $('#packages-grid');
@@ -346,7 +367,7 @@ function renderPackages() {
       <ul class="package-features">
         ${p.features.map((f) => `<li>${esc(f)}</li>`).join('')}
       </ul>
-      <button class="btn ${p.featured ? 'btn-accent' : 'btn-primary'} btn-block btn-lg" data-add="${p.id}" aria-label="Add ${esc(p.name)} to cart">
+      <button type="button" class="btn ${p.featured ? 'btn-accent' : 'btn-primary'} btn-block btn-lg" data-add="${p.id}" aria-label="Add ${esc(p.name)} to cart">
         Add to Cart
       </button>
     </article>`).join('');
@@ -356,7 +377,7 @@ function renderNiches() {
   const grid = $('#niches-grid');
   if (!grid) return;
   grid.innerHTML = PRODUCTS.filter((p) => p.category === 'niche').map((p, i) => `
-    <button class="niche reveal" style="--d:${(i % 4) * 80}ms; --niche-bg:${p.bg}; --niche-ink:${p.ink}"
+    <button type="button" class="niche reveal" style="--d:${(i % 4) * 80}ms; --niche-bg:${p.bg}; --niche-ink:${p.ink}"
             data-add="${p.id}" aria-label="Add ${esc(p.name)} to cart, ${formatZAR(p.price)}">
       <div class="niche-mock" aria-hidden="true">
         <div class="nm-bar"><i></i><span></span><span></span><span></span></div>
@@ -385,7 +406,7 @@ function renderAddons() {
       </div>
       <div class="addon-bottom">
         <span class="addon-price">${formatZAR(p.price)}${p.unit ? `<small>${esc(p.unit)}</small>` : ''}</span>
-        <button class="btn btn-outline" data-add="${p.id}" aria-label="Add ${esc(p.name)} to cart">Add to Cart</button>
+        <button type="button" class="btn btn-outline" data-add="${p.id}" aria-label="Add ${esc(p.name)} to cart">Add to Cart</button>
       </div>
     </article>`).join('');
 }
@@ -428,7 +449,7 @@ function renderServices() {
           <div class="service-head">
             <span class="service-icon" aria-hidden="true">${p.icon}</span>
             <div>
-              <h4 id="${p.id}-title">${esc(p.cardTitle || p.name)}</h4>
+              <h3 id="${p.id}-title">${esc(p.cardTitle || p.name)}</h3>
               <div class="service-price">
                 <span class="price-from">From</span>
                 <strong>${formatZAR(p.price)}</strong>
@@ -463,7 +484,7 @@ function renderServices() {
         <div class="service-head">
           <span class="service-icon" aria-hidden="true">${p.icon}</span>
           <div>
-            <h4 id="${p.id}-title">${esc(p.name)}</h4>
+            <h3 id="${p.id}-title">${esc(p.name)}</h3>
             <div class="service-price">
               ${p.from ? '<span class="price-from">From</span>' : ''}
               <strong>${formatZAR(p.price)}</strong>
@@ -490,7 +511,7 @@ function renderServices() {
       <div class="service-key-top">
         <span class="service-icon" aria-hidden="true">${p.icon}</span>
         <div>
-          <h4 id="${p.id}-title">${esc(p.name)}</h4>
+          <h3 id="${p.id}-title">${esc(p.name)}</h3>
           ${p.description ? `<p class="service-desc">${esc(p.description)}</p>` : ''}
         </div>
       </div>
@@ -515,18 +536,18 @@ function renderServices() {
 
   grid.innerHTML = `
     <div class="services-block">
-      <h3 class="services-subhead reveal">Core registrations</h3>
+      <h2 class="services-subhead reveal">Core registrations</h2>
       <div class="services-core-grid">${coreHtml}</div>
     </div>
 
     <div class="services-block">
-      <h3 class="services-subhead reveal">Other key services</h3>
+      <h2 class="services-subhead reveal">Other key services</h2>
       <div class="services-key-grid">${keyHtml}</div>
     </div>
 
     <div class="services-lists-grid">
       <section class="price-panel reveal" aria-labelledby="cipc-list-title">
-        <h3 id="cipc-list-title">Additional CIPC Services</h3>
+        <h2 id="cipc-list-title">Additional CIPC Services</h2>
         <ul class="price-list">
           ${cipcServices.map(renderPriceRow).join('')}
         </ul>
@@ -534,7 +555,7 @@ function renderServices() {
       </section>
 
       <section class="price-panel reveal" style="--d:100ms" aria-labelledby="support-list-title">
-        <h3 id="support-list-title">Business Support Services</h3>
+        <h2 id="support-list-title">Business Support Services</h2>
         <ul class="price-list">
           ${supportServices.map(renderPriceRow).join('')}
         </ul>
@@ -602,7 +623,8 @@ function removeFromCart(id) {
   saveCart();
   renderCart();
   // Keep keyboard focus inside the drawer after removing
-  ($('.ci-remove') || $('#cart-close')).focus();
+  const fallback = $('.ci-remove') || $('#cart-close');
+  if (fallback) fallback.focus();
 }
 
 const cartCount = () => cart.reduce((sum, i) => sum + i.qty, 0);
@@ -621,6 +643,7 @@ let lastFocused = null;
 
 function renderCart() {
   const list = $('#cart-items');
+  if (!list || !drawer || !cartOpenBtn) return;
   const count = cartCount();
   const hasServices = cartHasServices();
   const hasFrom = cartHasFromItems();
@@ -652,19 +675,22 @@ function renderCart() {
   $('#cart-count').textContent = count;
   const fromNoteEl = $('#cart-from-note');
   if (fromNoteEl) fromNoteEl.hidden = !hasFrom;
-  $('#cart-service-note').hidden = !hasServices;
+  const svcNoteEl = $('#cart-service-note');
+  if (svcNoteEl) svcNoteEl.hidden = !hasServices;
   cartOpenBtn.setAttribute('aria-label', `Open cart, ${count} item${count === 1 ? '' : 's'}`);
   drawer.classList.toggle('is-empty', count === 0);
 }
 
 function bumpCount() {
   const el = $('#cart-count');
+  if (!el) return;
   el.classList.remove('bump');
   void el.offsetWidth; // restart animation
   el.classList.add('bump');
 }
 
 function openCart() {
+  if (!drawer || !overlay || !cartOpenBtn) return;
   lastFocused = document.activeElement;
   overlay.hidden = false;
   requestAnimationFrame(() => overlay.classList.add('show'));
@@ -673,10 +699,14 @@ function openCart() {
   drawer.setAttribute('aria-hidden', 'false');
   cartOpenBtn.setAttribute('aria-expanded', 'true');
   document.body.classList.add('no-scroll');
-  setTimeout(() => $('#cart-close').focus(), 50);
+  setTimeout(() => {
+    const closeBtn = $('#cart-close');
+    if (closeBtn) closeBtn.focus();
+  }, 50);
 }
 
 function closeCart({ restoreFocus = true } = {}) {
+  if (!drawer || !overlay || !cartOpenBtn) return;
   overlay.classList.remove('show');
   drawer.classList.remove('open');
   drawer.setAttribute('inert', '');
@@ -689,7 +719,7 @@ function closeCart({ restoreFocus = true } = {}) {
 
 /** Keep Tab focus inside the open drawer */
 function trapFocus(e) {
-  if (e.key !== 'Tab' || !drawer.classList.contains('open')) return;
+  if (e.key !== 'Tab' || !drawer || !drawer.classList.contains('open')) return;
   const focusable = $$('button, a[href], input, textarea, select, [tabindex]:not([tabindex="-1"])', drawer)
     .filter((el) => !el.disabled && el.offsetParent !== null);
   if (!focusable.length) return;
@@ -793,44 +823,10 @@ function orderOnWhatsApp(e) {
  * To enable, create a PayFast merchant account, then replace the
  * placeholder below. NEVER expose your passphrase in front-end code:
  * generate the signature on a server.
- *
- * const PAYFAST = {
- *   url: 'https://www.payfast.co.za/eng/process', // sandbox: https://sandbox.payfast.co.za/eng/process
- *   merchant_id: 'YOUR_MERCHANT_ID',
- *   merchant_key: 'YOUR_MERCHANT_KEY',
- *   return_url: 'https://metsing.store/thank-you.html',
- *   cancel_url: 'https://metsing.store/',
- *   notify_url: 'https://metsing.store/api/payfast-notify',
- * };
- *
- * const d = getFormData();
- * const fields = {
- *   merchant_id: PAYFAST.merchant_id,
- *   merchant_key: PAYFAST.merchant_key,
- *   return_url: PAYFAST.return_url,
- *   cancel_url: PAYFAST.cancel_url,
- *   notify_url: PAYFAST.notify_url,
- *   name_first: d.name,
- *   email_address: d.email,
- *   amount: cartTotal().toFixed(2),
- *   item_name: 'Metsing.store order',
- *   // signature: '...generated server-side...'
- * };
- * const form = document.createElement('form');
- * form.method = 'POST';
- * form.action = PAYFAST.url;
- * Object.entries(fields).forEach(([k, v]) => {
- *   const input = document.createElement('input');
- *   input.type = 'hidden'; input.name = k; input.value = v;
- *   form.appendChild(input);
- * });
- * document.body.appendChild(form);
- * form.submit();
  */
 function payWithPayFast() {
   if (!cart.length) return;
   if (!validateForm()) return;
-  // Placeholder until PayFast is configured (see comment above)
   showToast('Online card payments are coming soon. Please order on WhatsApp for now.');
 }
 
@@ -840,6 +836,7 @@ function payWithPayFast() {
 let toastTimer;
 function showToast(message, withCartLink = false) {
   const toast = $('#toast');
+  if (!toast) return;
   toast.innerHTML = `<span>${esc(message)}</span>${withCartLink ? '<button type="button" id="toast-view">View cart</button>' : ''}`;
   toast.classList.add('show');
   clearTimeout(toastTimer);
@@ -851,8 +848,14 @@ function showToast(message, withCartLink = false) {
    --------------------------------------------------------- */
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  $('#theme-toggle').setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-  $('meta[name="theme-color"]').setAttribute('content', theme === 'dark' ? '#07130E' : '#0B3D2E');
+  const toggleBtn = $('#theme-toggle');
+  if (toggleBtn) {
+    toggleBtn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+  }
+  const metaTheme = $('meta[name="theme-color"]');
+  if (metaTheme) {
+    metaTheme.setAttribute('content', theme === 'dark' ? '#07130E' : '#0B3D2E');
+  }
   try { localStorage.setItem(CONFIG.themeKey, theme); } catch (e) { /* storage unavailable */ }
 }
 
@@ -862,6 +865,7 @@ function setTheme(theme) {
 function toggleMenu(force) {
   const links = $('#nav-links');
   const btn = $('#menu-toggle');
+  if (!links || !btn) return;
   const open = typeof force === 'boolean' ? force : !links.classList.contains('open');
   links.classList.toggle('open', open);
   btn.setAttribute('aria-expanded', String(open));
@@ -891,178 +895,22 @@ function initFAQ() {
 /* ---------------------------------------------------------
    12. Scroll reveal
    --------------------------------------------------------- */
-let revealObserver = null;
-
 function initReveal() {
   const els = $$('.reveal');
+  if (!els.length) return;
   if (!('IntersectionObserver' in window)) {
     els.forEach((el) => el.classList.add('visible'));
     return;
   }
-  revealObserver = new IntersectionObserver((entries) => {
+  const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         entry.target.classList.add('visible');
-        revealObserver.unobserve(entry.target);
+        io.unobserve(entry.target);
       }
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-  els.forEach((el) => revealObserver.observe(el));
-}
-
-function revealViewElements(viewEl) {
-  if (!viewEl) return;
-  const hiddenEls = $$('.reveal:not(.visible)', viewEl);
-  if (!hiddenEls.length) return;
-  if (!revealObserver) {
-    hiddenEls.forEach((el) => el.classList.add('visible'));
-    return;
-  }
-  hiddenEls.forEach((el) => {
-    revealObserver.unobserve(el);
-    revealObserver.observe(el);
-  });
-  // Ensure elements already within the viewport become visible immediately after un-hiding
-  requestAnimationFrame(() => {
-    const vh = window.innerHeight || document.documentElement.clientHeight;
-    hiddenEls.forEach((el) => {
-      const rect = el.getBoundingClientRect();
-      if (rect.top < vh && rect.bottom > 0) {
-        el.classList.add('visible');
-        revealObserver.unobserve(el);
-      }
-    });
-  });
-}
-
-/* ---------------------------------------------------------
-   12b. View controller (hash-based tab routing)
-   --------------------------------------------------------- */
-const HOME_TITLE = document.title;
-const VIEW_TITLES = {
-  home: HOME_TITLE,
-  niches: 'Store Niches | Metsing.store',
-  addons: 'Add-ons | Metsing.store',
-  services: 'Company Consultation | Metsing.store',
-};
-const HOME_ANCHORS = new Set(['packages', 'how', 'testimonials', 'faq', 'top']);
-
-function getScrollBehavior() {
-  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
-}
-
-function updateNavCurrent(viewName, hashId) {
-  let activeHref = '';
-  if (viewName === 'niches' || viewName === 'addons' || viewName === 'services') {
-    activeHref = `#${viewName}`;
-  } else if (hashId === 'packages' || hashId === 'faq') {
-    activeHref = `#${hashId}`;
-  }
-  $$('#nav-links a').forEach((a) => {
-    if (a.getAttribute('href') === activeHref) {
-      a.setAttribute('aria-current', 'page');
-    } else {
-      a.removeAttribute('aria-current');
-    }
-  });
-}
-
-function showView(name) {
-  const targetName = VIEW_TITLES[name] ? name : 'home';
-  let activeWrapper = null;
-
-  $$('[data-view]').forEach((wrapper) => {
-    const isTarget = wrapper.dataset.view === targetName;
-    wrapper.classList.toggle('is-active', isTarget);
-    if (isTarget) {
-      wrapper.removeAttribute('hidden');
-      activeWrapper = wrapper;
-    } else {
-      wrapper.setAttribute('hidden', '');
-    }
-  });
-
-  toggleMenu(false);
-  document.title = VIEW_TITLES[targetName] || HOME_TITLE;
-
-  if (activeWrapper) {
-    revealViewElements(activeWrapper);
-    const heading = $('h2', activeWrapper);
-    if (heading) {
-      if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
-      try {
-        heading.focus({ preventScroll: true });
-      } catch (err) {
-        heading.focus();
-      }
-    }
-  }
-  return activeWrapper;
-}
-
-function routeFromHash({ isInitial = false } = {}) {
-  const rawHash = (window.location.hash || '').replace(/^#/, '');
-  const behavior = isInitial ? 'auto' : getScrollBehavior();
-
-  if (rawHash === 'niches' || rawHash === 'addons' || rawHash === 'services' || rawHash === 'consultation') {
-    const viewName = rawHash === 'consultation' ? 'services' : rawHash;
-    showView(viewName);
-    updateNavCurrent(viewName, viewName);
-    window.scrollTo({ top: 0, behavior });
-    return;
-  }
-
-  if (rawHash === 'tender-bundle') {
-    showView('services');
-    updateNavCurrent('services', 'tender-bundle');
-    requestAnimationFrame(() => {
-      const bundleEl = $('#tender-bundle');
-      if (bundleEl) bundleEl.scrollIntoView({ behavior, block: 'start' });
-    });
-    return;
-  }
-
-  // Home view (default for #packages, #how, #testimonials, #faq, #top, empty, or unknown hash)
-  const isKnownHomeAnchor = HOME_ANCHORS.has(rawHash);
-  showView('home');
-  updateNavCurrent('home', isKnownHomeAnchor ? rawHash : '');
-
-  if (!rawHash || rawHash === 'top' || !isKnownHomeAnchor) {
-    if (!isInitial || rawHash === 'top') {
-      window.scrollTo({ top: 0, behavior });
-    }
-    return;
-  }
-
-  requestAnimationFrame(() => {
-    const targetEl = document.getElementById(rawHash);
-    if (targetEl) {
-      targetEl.scrollIntoView({ behavior, block: 'start' });
-      const sectionHeading = $('h2', targetEl);
-      if (sectionHeading) {
-        if (!sectionHeading.hasAttribute('tabindex')) sectionHeading.setAttribute('tabindex', '-1');
-        try { sectionHeading.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
-      }
-    }
-  });
-}
-
-function initViews() {
-  routeFromHash({ isInitial: true });
-  window.addEventListener('hashchange', () => routeFromHash({ isInitial: false }));
-
-  // Handle clicks on hash links even when the hash is already active (e.g. clicking an already-open tab)
-  document.addEventListener('click', (e) => {
-    const link = e.target.closest('a[href^="#"]');
-    if (!link || link.classList.contains('js-whatsapp') || link.classList.contains('skip-link')) return;
-    const href = link.getAttribute('href');
-    if (!href || href === '#') return;
-    if (drawer.classList.contains('open')) closeCart({ restoreFocus: false });
-    if (window.location.hash === href) {
-      e.preventDefault();
-      routeFromHash({ isInitial: false });
-    }
-  });
+  els.forEach((el) => io.observe(el));
 }
 
 /* ---------------------------------------------------------
@@ -1076,24 +924,29 @@ function init() {
   renderCart();
   initFAQ();
   initReveal();
-  initViews();
 
   // Theme toggle
   setTheme(document.documentElement.getAttribute('data-theme') || 'light');
-  $('#theme-toggle').addEventListener('click', () => {
-    setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-  });
+  const themeBtn = $('#theme-toggle');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+  }
 
-  // All WhatsApp links: set real href from config
+  // All WhatsApp links: enhance href from config if data-msg is present
   $$('.js-whatsapp').forEach((a) => {
-    a.href = whatsappLink(a.dataset.msg || 'Hi Metsing.store!');
+    if (a.dataset.msg) {
+      a.href = whatsappLink(a.dataset.msg);
+    }
     a.target = '_blank';
     a.rel = 'noopener';
   });
   $$('.js-phone-display').forEach((el) => { el.textContent = CONFIG.whatsappDisplay; });
-  $('#year').textContent = new Date().getFullYear();
+  const yearEl = $('#year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // Add to cart (event delegation covers packages, niches & add-ons)
+  // Add to cart (event delegation covers packages, niches, add-ons & services)
   document.addEventListener('click', (e) => {
     const addBtn = e.target.closest('[data-add]');
     if (addBtn) {
@@ -1107,56 +960,74 @@ function init() {
       return;
     }
     if (e.target.closest('#toast-view') || e.target.closest('.js-open-cart')) {
-      $('#toast').classList.remove('show');
+      const toast = $('#toast');
+      if (toast) toast.classList.remove('show');
       openCart();
     }
   });
 
   // Cart drawer controls
-  cartOpenBtn.addEventListener('click', openCart);
-  $('#cart-close').addEventListener('click', () => closeCart());
-  overlay.addEventListener('click', () => closeCart());
-  $('#cart-browse').addEventListener('click', () => closeCart({ restoreFocus: false }));
-  $('#cart-items').addEventListener('click', (e) => {
-    const qtyBtn = e.target.closest('[data-qty]');
-    if (qtyBtn) {
-      const id = qtyBtn.dataset.id;
-      const delta = Number(qtyBtn.dataset.qty);
-      changeQty(id, delta);
-      // Restore focus to the same button after re-render
-      const again = $(`[data-qty="${delta}"][data-id="${id}"]`);
-      (again || $('#cart-close')).focus();
-      return;
-    }
-    const removeBtn = e.target.closest('[data-remove]');
-    if (removeBtn) removeFromCart(removeBtn.dataset.remove);
-  });
+  if (cartOpenBtn) cartOpenBtn.addEventListener('click', openCart);
+  const closeBtn = $('#cart-close');
+  if (closeBtn) closeBtn.addEventListener('click', () => closeCart());
+  if (overlay) overlay.addEventListener('click', () => closeCart());
+  const browseBtn = $('#cart-browse');
+  if (browseBtn) browseBtn.addEventListener('click', () => closeCart({ restoreFocus: false }));
+
+  const cartItemsEl = $('#cart-items');
+  if (cartItemsEl) {
+    cartItemsEl.addEventListener('click', (e) => {
+      const qtyBtn = e.target.closest('[data-qty]');
+      if (qtyBtn) {
+        const id = qtyBtn.dataset.id;
+        const delta = Number(qtyBtn.dataset.qty);
+        changeQty(id, delta);
+        const again = $(`[data-qty="${delta}"][data-id="${id}"]`);
+        const fallback = $('#cart-close');
+        if (again) again.focus();
+        else if (fallback) fallback.focus();
+        return;
+      }
+      const removeBtn = e.target.closest('[data-remove]');
+      if (removeBtn) removeFromCart(removeBtn.dataset.remove);
+    });
+  }
 
   // Checkout
-  $('#checkout-form').addEventListener('submit', orderOnWhatsApp);
-  $('#checkout-payfast').addEventListener('click', payWithPayFast);
-  $$('#checkout-form input').forEach((input) => {
-    input.addEventListener('input', () => input.removeAttribute('aria-invalid'));
-  });
+  const checkoutForm = $('#checkout-form');
+  if (checkoutForm) {
+    checkoutForm.addEventListener('submit', orderOnWhatsApp);
+    $$('#checkout-form input').forEach((input) => {
+      input.addEventListener('input', () => input.removeAttribute('aria-invalid'));
+    });
+  }
+  const payfastBtn = $('#checkout-payfast');
+  if (payfastBtn) payfastBtn.addEventListener('click', payWithPayFast);
 
   // Mobile menu
-  $('#menu-toggle').addEventListener('click', () => toggleMenu());
+  const menuBtn = $('#menu-toggle');
+  if (menuBtn) menuBtn.addEventListener('click', () => toggleMenu());
   $$('#nav-links a').forEach((a) => a.addEventListener('click', () => toggleMenu(false)));
 
   // Keyboard: Escape closes cart/menu, Tab trapped in drawer
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (drawer.classList.contains('open')) closeCart();
-      else if ($('#nav-links').classList.contains('open')) { toggleMenu(false); $('#menu-toggle').focus(); }
+      if (drawer && drawer.classList.contains('open')) closeCart();
+      else if ($('#nav-links') && $('#nav-links').classList.contains('open')) {
+        toggleMenu(false);
+        if (menuBtn) menuBtn.focus();
+      }
     }
     trapFocus(e);
   });
 
   // Navbar shadow on scroll
   const navbar = $('#navbar');
-  const onScroll = () => navbar.classList.toggle('scrolled', window.scrollY > 10);
-  window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
+  if (navbar) {
+    const onScroll = () => navbar.classList.toggle('scrolled', window.scrollY > 10);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
 
   // Keep cart in sync across browser tabs
   window.addEventListener('storage', (e) => {
