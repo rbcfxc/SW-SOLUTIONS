@@ -136,7 +136,7 @@ const PRODUCTS = [
   },
 
   /* ----- Ready-made store niches (each = a Dropshipping Store) ----- */
-  { id: 'niche-pet',     category: 'niche', label: 'Pet Supplies',          name: 'Dropshipping Store: Pet Supplies',          price: 1000, emoji: '🐾', mini: ['🦴', '🐱', '🎾'], bg: '#FDEBD3', ink: '#8A4B12' },
+  { id: 'niche-food',    category: 'niche', label: 'Food & Restaurant',     name: 'Dropshipping Store: Food & Restaurant',     price: 1000, emoji: '🍔', mini: ['🍕', '🥗', '☕'], bg: '#FDEBD3', ink: '#8A4B12' },
   { id: 'niche-beauty',  category: 'niche', label: 'Beauty & Skincare',     name: 'Dropshipping Store: Beauty & Skincare',     price: 1000, emoji: '🧴', mini: ['💄', '🌸', '✨'], bg: '#FBE3EA', ink: '#9C2F55' },
   { id: 'niche-fitness', category: 'niche', label: 'Fitness & Activewear',  name: 'Dropshipping Store: Fitness & Activewear',  price: 1000, emoji: '🏋️', mini: ['👟', '🧘', '💪'], bg: '#E2F0FF', ink: '#1C4E8A' },
   { id: 'niche-home',    category: 'niche', label: 'Home & Kitchen',        name: 'Dropshipping Store: Home & Kitchen',        price: 1000, emoji: '🍳', mini: ['🪴', '🕯️', '☕'], bg: '#EDE8DC', ink: '#5B4A2E' },
