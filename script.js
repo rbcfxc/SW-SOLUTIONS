@@ -819,33 +819,69 @@ function orderOnWhatsApp(e) {
 }
 
 /**
- * Stitch Money online payment checkout via Stitch Express link.
- * Validates checkout details, sends order info to WhatsApp, then
- * redirects customer to the secure Stitch Express payment page.
+ * Stitch Money online payment checkout.
+ * First attempts the server-side Stitch GraphQL API (/api/stitch/create-payment)
+ * using Client ID test-bd36d70d-7cad-4f1c-bd11-978996e001c3.
+ * If the server secret isn't configured yet, falls back to the Stitch Express link.
  */
-function payWithStitch() {
+async function payWithStitch() {
   if (!cart.length) return;
   if (!validateForm()) return;
 
   const btn = $('#checkout-stitch') || $('#checkout-payfast');
-  const d = getFormData();
-  const total = cartTotal();
-  const refCode = `MS-${Date.now().toString().slice(-6)}`;
+  const errorEl = $('#form-error');
+  const originalText = btn ? btn.textContent : 'Pay Online (Stitch)';
 
-  showToast('Opening WhatsApp order & redirecting to Stitch payment… 🔒');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Connecting to Stitch…';
+  }
+  if (errorEl) errorEl.textContent = '';
 
-  // Notify WhatsApp with the full order summary and generated payment reference
-  const waMsg = `${buildOrderMessage()}\n\n💳 *Payment method:* Stitch Express (${CONFIG.stitchPaymentLink})\n*Payment Ref:* ${refCode}`;
-  window.open(whatsappLink(waMsg), '_blank', 'noopener');
+  try {
+    try {
+      sessionStorage.setItem('metsing-pending-order', buildOrderMessage());
+    } catch (e) { /* sessionStorage optional */ }
 
-  // Build Stitch Express link with amount/reference parameters
-  let payUrl = CONFIG.stitchPaymentLink;
-  const sep = payUrl.includes('?') ? '&' : '?';
-  payUrl += `${sep}amount=${encodeURIComponent(total)}&reference=${encodeURIComponent(refCode)}&payerReference=${encodeURIComponent(d.name || 'Metsing Customer')}`;
+    const res = await fetch('/api/stitch/create-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: cart,
+        customer: getFormData(),
+        returnPath: window.location.pathname,
+      }),
+    });
 
-  setTimeout(() => {
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok && data.paymentUrl) {
+      showToast('Redirecting to Stitch secure payment… 🔒');
+      window.location.href = data.paymentUrl;
+      return;
+    }
+
+    // Fallback to Stitch Express link if server secret isn't set yet
+    const d = getFormData();
+    const total = cartTotal();
+    const refCode = `MS-${Date.now().toString().slice(-6)}`;
+    let payUrl = CONFIG.stitchPaymentLink;
+    const sep = payUrl.includes('?') ? '&' : '?';
+    payUrl += `${sep}amount=${encodeURIComponent(total)}&reference=${encodeURIComponent(refCode)}&payerReference=${encodeURIComponent(d.name || 'Metsing Customer')}`;
+
+    showToast('Redirecting to Stitch Express payment… 🔒');
     window.location.href = payUrl;
-  }, 800);
+  } catch (err) {
+    // Fallback if static host without /api/stitch/create-payment
+    const d = getFormData();
+    const total = cartTotal();
+    const refCode = `MS-${Date.now().toString().slice(-6)}`;
+    let payUrl = CONFIG.stitchPaymentLink;
+    const sep = payUrl.includes('?') ? '&' : '?';
+    payUrl += `${sep}amount=${encodeURIComponent(total)}&reference=${encodeURIComponent(refCode)}&payerReference=${encodeURIComponent(d.name || 'Metsing Customer')}`;
+
+    showToast('Redirecting to Stitch Express payment… 🔒');
+    window.location.href = payUrl;
+  }
 }
 
 /**

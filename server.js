@@ -102,12 +102,14 @@ const CATALOG = {
 let cachedToken = null;
 let cachedTokenExpiresAt = 0;
 
+const STITCH_CLIENT_ID = process.env.STITCH_CLIENT_ID || 'test-bd36d70d-7cad-4f1c-bd11-978996e001c3';
+
 function isStitchConfigured() {
-  const cid = process.env.STITCH_CLIENT_ID;
   const secret = process.env.STITCH_CLIENT_SECRET;
-  const acc = process.env.STITCH_BENEFICIARY_ACCOUNT_NUMBER;
+  const isTest = STITCH_CLIENT_ID.startsWith('test-');
+  const acc = process.env.STITCH_BENEFICIARY_ACCOUNT_NUMBER || (isTest ? '62000000000' : '');
   return Boolean(
-    cid && cid !== 'your_stitch_client_id_here' &&
+    STITCH_CLIENT_ID &&
     secret && secret !== 'your_stitch_client_secret_here' &&
     acc && acc !== '00000000000'
   );
@@ -120,7 +122,7 @@ async function getStitchClientToken() {
 
   const body = new URLSearchParams({
     grant_type: 'client_credentials',
-    client_id: process.env.STITCH_CLIENT_ID,
+    client_id: STITCH_CLIENT_ID,
     client_secret: process.env.STITCH_CLIENT_SECRET,
     scope: 'client_paymentrequest',
     audience: STITCH_TOKEN_URL,
@@ -198,7 +200,7 @@ async function createStitchPaymentRequest({ totalZAR, customer, externalReferenc
     externalReference,
     beneficiaryName: process.env.STITCH_BENEFICIARY_NAME || 'Metsing Store',
     beneficiaryBankId: process.env.STITCH_BENEFICIARY_BANK_ID || 'fnb',
-    beneficiaryAccountNumber: process.env.STITCH_BENEFICIARY_ACCOUNT_NUMBER,
+    beneficiaryAccountNumber: process.env.STITCH_BENEFICIARY_ACCOUNT_NUMBER || '62000000000',
   };
 
   const res = await fetch(STITCH_GRAPHQL_URL, {
