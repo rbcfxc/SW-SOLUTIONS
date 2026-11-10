@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ===== SEO (Transactional confirmation page — noindex) ===== -->
+  <title>Payment Confirmed — Thank You | Metsing.store</title>
+  <meta name="description" content="Thank you for your payment on Metsing.store. View your order summary, payment reference, and kick off your store or business service on WhatsApp." />
+  <meta name="author" content="Metsing.store" />
+  <meta name="robots" content="noindex, follow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="theme-color" content="#0B3D2E" />
+  <link rel="canonical" href="https://metsing-store.onrender.com/payment-success/" />
+
+  <!-- ===== Icons & Manifest ===== -->
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png" />
+  <link rel="manifest" href="../site.webmanifest" />
+
+  <!-- ===== Fonts ===== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../style.min.css" />
+
+  <!-- Apply saved theme before paint to avoid a flash -->
+  <script>
+    document.documentElement.classList.add('js');
+    try {
+      var t = localStorage.getItem('metsing-theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="navbar" id="navbar">
+    <nav class="container nav-inner" aria-label="Main navigation">
+      <a href="../" class="logo" aria-label="Metsing.store home">
+        <img src="../favicon.svg" alt="" width="36" height="36" decoding="async" class="logo-mark-img" />
+        <span class="logo-text">Metsing<span>.store</span></span>
+      </a>
+
+      <ul class="nav-links" id="nav-links">
+        <li><a href="../">Home</a></li>
+        <li><a href="../#packages">Packages</a></li>
+        <li><a href="../store-niches/">Store Niches</a></li>
+        <li><a href="../add-ons/">Add-ons</a></li>
+        <li><a href="../company-consultation/">Company Consultation</a></li>
+        <li><a href="../#faq">FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="icon-btn" id="theme-toggle" aria-label="Switch to dark mode">
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v2.5M12 20v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M1.5 12H4M20 12h2.5M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>
+        </button>
+
+        <button class="cart-btn" id="cart-open" aria-label="Open cart, 0 items" aria-controls="cart-drawer" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6.2"/><circle cx="10" cy="20.5" r="1.3"/><circle cx="17" cy="20.5" r="1.3"/></svg>
+          <span class="cart-label">Cart</span>
+          <span class="cart-count" id="cart-count" aria-hidden="true">0</span>
+        </button>
+
+        <button class="icon-btn menu-toggle" id="menu-toggle" aria-label="Open menu" aria-controls="nav-links" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="section section-page" aria-labelledby="confirm-title">
+      <div class="container container-narrow">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="../">Home</a></li>
+            <li><span aria-current="page">Payment Confirmation</span></li>
+          </ol>
+        </nav>
+
+        <!-- ================= CONFIRMATION CARD ================= -->
+        <article class="confirm-card" id="payment-confirm-card">
+          <header class="confirm-head">
+            <div class="confirm-icon" id="confirm-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            </div>
+            <p class="eyebrow" id="confirm-eyebrow">Stitch Secure Payment</p>
+            <h1 id="confirm-title">Payment successful!</h1>
+            <p id="confirm-subtitle">Thank you for your order. Your payment has been received and our team is ready to get started on your project.</p>
+          </header>
+
+          <!-- Key Payment Metadata -->
+          <div class="confirm-meta" aria-label="Payment receipt details">
+            <div class="confirm-meta-item">
+              <span>Order Reference</span>
+              <strong id="confirm-ref">MS-CONFIRMED</strong>
+            </div>
+            <div class="confirm-meta-item">
+              <span>Payment Method</span>
+              <strong>Stitch Money</strong>
+            </div>
+            <div class="confirm-meta-item">
+              <span>Date</span>
+              <strong id="confirm-date">Today</strong>
+            </div>
+            <div class="confirm-meta-item">
+              <span>Status</span>
+              <span class="status-pill" id="confirm-status-pill">✓ Paid</span>
+            </div>
+          </div>
+
+          <!-- Order Items & Customer Details -->
+          <div class="confirm-grid" id="confirm-details-grid">
+            <div class="confirm-box">
+              <h2>Order summary</h2>
+              <ul class="confirm-items-list" id="confirm-items-list">
+                <li class="confirm-item-row">
+                  <span>Metsing.store Online Order</span>
+                  <strong id="confirm-fallback-amt">Paid</strong>
+                </li>
+              </ul>
+              <div class="confirm-total-row">
+                <span>Total Paid</span>
+                <strong id="confirm-total">R0</strong>
+              </div>
+            </div>
+
+            <div class="confirm-box">
+              <h2>Your details</h2>
+              <dl class="confirm-details-list" id="confirm-customer-list">
+                <div>
+                  <dt>Customer</dt>
+                  <dd id="confirm-cust-name">Valued Customer</dd>
+                </div>
+                <div>
+                  <dt>Email</dt>
+                  <dd id="confirm-cust-email">—</dd>
+                </div>
+                <div>
+                  <dt>Phone / WhatsApp</dt>
+                  <dd id="confirm-cust-phone">—</dd>
+                </div>
+                <div id="confirm-cust-biz-row" hidden>
+                  <dt>Business / Niche</dt>
+                  <dd id="confirm-cust-biz">—</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Primary CTA Buttons -->
+          <div class="confirm-actions">
+            <a href="https://wa.me/27644997135?text=Hi%20Metsing.store!%20I%20have%20completed%20my%20online%20payment%20via%20Stitch." target="_blank" rel="noopener" class="btn btn-whatsapp btn-lg" id="confirm-wa-btn">
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="wa-icon"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>
+              Send Payment Confirmation on WhatsApp
+            </a>
+            <button type="button" class="btn btn-outline btn-lg" id="confirm-retry-btn" hidden>
+              Re-open Cart &amp; Try Again
+            </button>
+            <button type="button" class="btn btn-ghost btn-lg" id="confirm-print-btn">
+              Print / Save Receipt
+            </button>
+            <a href="../" class="btn btn-outline btn-lg">← Back to Home</a>
+          </div>
+          <p class="confirm-note" id="confirm-foot-note">
+            Tap <strong>Send Payment Confirmation on WhatsApp</strong> above so our team can immediately link your payment reference and start building.
+          </p>
+        </article>
+
+        <!-- ================= WHAT HAPPENS NEXT ================= -->
+        <div class="confirm-next-section" id="confirm-next-section">
+          <header class="section-head">
+            <p class="eyebrow">Next Steps</p>
+            <h2>What happens now?</h2>
+            <p>Here is how we take your order from payment to launch.</p>
+          </header>
+
+          <div class="confirm-next-grid">
+            <div class="confirm-next-step">
+              <span class="confirm-next-num" aria-hidden="true">1</span>
+              <h3>WhatsApp Kickoff</h3>
+              <p>Click the green WhatsApp button above to send your order reference and share your logo, preferred colours, or CIPC details.</p>
+            </div>
+            <div class="confirm-next-step">
+              <span class="confirm-next-num" aria-hidden="true">2</span>
+              <h3>We Build &amp; Process</h3>
+              <p>Our team sets up your online store, business website (within 48 hours), or Company Consultation registration and keeps you updated.</p>
+            </div>
+            <div class="confirm-next-step">
+              <span class="confirm-next-num" aria-hidden="true">3</span>
+              <h3>Handover &amp; Launch</h3>
+              <p>You receive your live store link, admin login details, or official registration documents ready to start trading in South Africa.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <a href="../" class="logo logo-footer" aria-label="Metsing.store home">
+          <img src="../favicon.svg" alt="" width="36" height="36" loading="lazy" decoding="async" class="logo-mark-img" />
+          <span class="logo-text">Metsing<span>.store</span></span>
+        </a>
+        <p class="footer-tag">Ready-made online stores, business websites and Company Consultation for South African entrepreneurs.</p>
+      </div>
+      <nav aria-label="Footer navigation">
+        <h2>Explore</h2>
+        <ul>
+          <li><a href="../#packages">Packages</a></li>
+          <li><a href="../store-niches/">Store Niches</a></li>
+          <li><a href="../add-ons/">Add-ons</a></li>
+          <li><a href="../company-consultation/">Company Consultation</a></li>
+          <li><a href="../#faq">FAQ</a></li>
+        </ul>
+      </nav>
+      <div>
+        <h2>Contact</h2>
+        <ul>
+          <li><a href="https://wa.me/27644997135?text=Hi%20Metsing.store!" target="_blank" rel="noopener" class="js-whatsapp" data-msg="Hi Metsing.store!">WhatsApp: <span class="js-phone-display">+27 64 499 7135</span></a></li>
+          <li><a href="mailto:hello@metsing.store">hello@metsing.store</a></li>
+          <li>South Africa 🇿🇦</li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; <span id="year">2026</span> Metsing.store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- ================= FLOATING WHATSAPP ================= -->
+  <a href="https://wa.me/27644997135?text=Hi%20Metsing.store!%20I%20have%20a%20question." target="_blank" rel="noopener" class="wa-float js-whatsapp" data-msg="Hi Metsing.store! I have a question." aria-label="Chat with us on WhatsApp">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .7.5l1 2.3c.1.2.1.4 0 .6l-.4.6-.5.5c-.2.2-.3.3-.1.7.2.3.8 1.4 1.8 2.2 1.2 1.1 2.2 1.4 2.6 1.6.3.1.5.1.7-.1l1-1.2c.2-.3.5-.3.8-.2l2.2 1c.3.2.5.3.6.4 0 .2 0 .8-.2 1.4z"/></svg>
+  </a>
+
+  <!-- ================= CART DRAWER ================= -->
+  <div class="overlay" id="overlay" hidden></div>
+  <aside class="cart-drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-hidden="true" inert>
+    <div class="cart-head">
+      <h2 id="cart-title">Your cart</h2>
+      <button class="icon-btn" id="cart-close" aria-label="Close cart">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="cart-body">
+      <ul class="cart-items" id="cart-items" aria-live="polite"></ul>
+      <div class="cart-empty" id="cart-empty">
+        <span aria-hidden="true">🛍️</span>
+        <p>Your cart is empty.</p>
+        <a href="../#packages" class="btn btn-primary" id="cart-browse">Browse Packages</a>
+      </div>
+
+      <form class="checkout" id="checkout-form" novalidate>
+        <h3>Your details</h3>
+        <div class="field">
+          <label for="f-name">Full name *</label>
+          <input id="f-name" name="name" type="text" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="f-email">Email *</label>
+          <input id="f-email" name="email" type="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="f-phone">Phone / WhatsApp *</label>
+          <input id="f-phone" name="phone" type="tel" autocomplete="tel" placeholder="e.g. 071 234 5678" required />
+        </div>
+        <div class="field">
+          <label for="f-business">Business name / niche</label>
+          <input id="f-business" name="business" type="text" placeholder="e.g. Glow Beauty, or your company name" />
+        </div>
+        <div class="field">
+          <label for="f-notes">Notes</label>
+          <textarea id="f-notes" name="notes" rows="3" placeholder="Colours you like, ideas, questions..."></textarea>
+        </div>
+        <p class="form-error" id="form-error" role="alert"></p>
+      </form>
+    </div>
+
+    <div class="cart-foot" id="cart-foot">
+      <div class="cart-total"><span id="cart-total-label">Total</span><strong id="cart-total">R0</strong></div>
+      <p class="cart-service-note" id="cart-from-note" hidden>
+        'From' prices are confirmed on WhatsApp once we know the details.
+      </p>
+      <p class="cart-service-note" id="cart-service-note" hidden>
+        Government/statutory fees are separate from our service fees and are paid directly to the relevant authority. Please have your ID copy and proof of address ready.
+      </p>
+      <button type="submit" form="checkout-form" class="btn btn-whatsapp btn-block" id="checkout-wa">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="wa-icon"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>
+        Order on WhatsApp
+      </button>
+      <button type="button" class="btn btn-primary btn-block" id="checkout-stitch">Pay Online (Stitch)</button>
+      <p class="cart-note">Once-off payment · We confirm everything with you on WhatsApp</p>
+    </div>
+  </aside>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="../script.min.js" defer></script>
+</body>
+</html>

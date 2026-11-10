@@ -820,8 +820,7 @@ function orderOnWhatsApp(e) {
 /**
  * Stitch Money online payment checkout.
  * Calls our Node backend (POST /api/stitch/create-payment) which
- * authenticates with Stitch OAuth2 using Client ID test-bd36d70d-7cad-4f1c-bd11-978996e001c3
- * and creates a payment initiation request on https://api.stitch.money/graphql.
+ * authenticates with Stitch and creates a dynamic payment link.
  */
 async function payWithStitch() {
   if (!cart.length) return;
@@ -838,17 +837,20 @@ async function payWithStitch() {
   if (errorEl) errorEl.textContent = '';
 
   try {
-    try {
-      sessionStorage.setItem('metsing-pending-order', buildOrderMessage());
-    } catch (e) { /* sessionStorage optional */ }
+    const customer = getFormData();
+    const waMsg = buildOrderMessage();
+    const itemsSnapshot = cart.map(({ id, qty }) => {
+      const p = findProduct(id);
+      return { id, name: p ? p.name : id, qty, price: p ? p.price : 0, lineTotal: p ? p.price * qty : 0 };
+    });
 
     const res = await fetch('/api/stitch/create-payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         items: cart,
-        customer: getFormData(),
-        returnPath: window.location.pathname,
+        customer,
+        returnPath: '/payment-success/',
       }),
     });
 
@@ -856,6 +858,21 @@ async function payWithStitch() {
     if (!res.ok || !data.ok || !data.paymentUrl) {
       throw new Error(data.error || 'Could not start Stitch payment. Make sure STITCH_CLIENT_SECRET is set on Render.');
     }
+
+    const orderSnapshot = {
+      id: data.id,
+      externalReference: data.externalReference,
+      totalZAR: data.totalZAR || cartTotal(),
+      items: itemsSnapshot,
+      customer,
+      whatsappMsg: waMsg,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      localStorage.setItem('metsing-last-order', JSON.stringify(orderSnapshot));
+      sessionStorage.setItem('metsing-pending-order', waMsg);
+    } catch (e) { /* storage optional */ }
 
     showToast('Redirecting to Stitch secure payment… 🔒');
     window.location.href = data.paymentUrl;
@@ -871,48 +888,173 @@ async function payWithStitch() {
 
 /**
  * Handle customer returning from Stitch hosted payment page
- * URL query params from Stitch: ?stitch_return=1&ref=...&id=...&status=complete|cancelled|closed
+ * and populate the /payment-success/ confirmation page.
  */
 async function handleStitchReturn() {
   const params = new URLSearchParams(window.location.search);
-  if (!params.get('stitch_return')) return;
+  const confirmCard = $('#payment-confirm-card');
+  const hasStitchReturn = Boolean(params.get('stitch_return') || params.get('ref') || params.get('id'));
 
-  const stitchId = params.get('id');
-  const statusParam = (params.get('status') || '').toLowerCase();
-  const ref = params.get('ref') || '';
-
-  // Clean query parameters from address bar without reloading
-  if (window.history && window.history.replaceState) {
-    window.history.replaceState({}, document.title, window.location.pathname);
+  // If customer returned with ?stitch_return=1 on another page, redirect them to /payment-success/
+  if (!confirmCard && params.get('stitch_return')) {
+    window.location.replace(`/payment-success/${window.location.search}`);
+    return;
   }
+
+  if (!confirmCard) return;
+
+  const stitchId = params.get('id') || '';
+  const statusParam = (params.get('status') || '').toLowerCase();
+  const refParam = params.get('ref') || '';
+  const amountParam = Number(params.get('amount')) || 0;
+
+  let savedOrder = null;
+  try {
+    const raw = localStorage.getItem('metsing-last-order');
+    if (raw) savedOrder = JSON.parse(raw);
+  } catch (e) { /* ignore */ }
 
   let verifiedState = statusParam;
-  if (stitchId) {
+  if (stitchId || refParam) {
     try {
-      const res = await fetch(`/api/stitch/status?id=${encodeURIComponent(stitchId)}`);
+      const qs = new URLSearchParams();
+      if (stitchId) qs.set('id', stitchId);
+      if (refParam) qs.set('ref', refParam);
+      const res = await fetch(`/api/stitch/status?${qs.toString()}`);
       const data = await res.json();
-      if (data.ok && data.state) {
-        verifiedState = data.state;
+      if (data.ok) {
+        if (data.state) verifiedState = data.state;
+        if (data.order && !savedOrder) savedOrder = data.order;
       }
-    } catch (e) { /* fallback to status query param */ }
+    } catch (e) { /* fallback to savedOrder / query params */ }
   }
 
-  if (verifiedState === 'PaymentInitiationRequestCompleted' || statusParam === 'complete') {
-    const savedMsg = sessionStorage.getItem('metsing-pending-order') || '';
-    sessionStorage.removeItem('metsing-pending-order');
-    cart = [];
-    saveCart();
-    renderCart();
-    showToast(`✓ Payment received (${ref || 'Stitch'})! Thank you for your order.`);
-    if (savedMsg) {
-      setTimeout(() => {
-        window.open(whatsappLink(`${savedMsg}\n\n✅ *Paid online via Stitch* (Ref: ${ref || stitchId || 'confirmed'})`), '_blank', 'noopener');
-      }, 900);
+  const isCancelled = (
+    statusParam === 'cancelled' ||
+    statusParam === 'closed' ||
+    statusParam === 'abandoned' ||
+    verifiedState === 'PaymentInitiationRequestCancelled' ||
+    verifiedState === 'PaymentInitiationRequestExpired'
+  );
+
+  const rawRef = refParam || (savedOrder && savedOrder.externalReference) || stitchId || '';
+  const displayRef = rawRef
+    ? (rawRef.startsWith('MS-') ? rawRef : `MS-${rawRef.slice(-8).toUpperCase()}`)
+    : 'MS-CONFIRMED';
+
+  const orderDate = (savedOrder && savedOrder.createdAt) ? new Date(savedOrder.createdAt) : new Date();
+  const formattedDate = orderDate.toLocaleDateString('en-ZA', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
+  const refEl = $('#confirm-ref');
+  if (refEl) refEl.textContent = displayRef;
+  const dateEl = $('#confirm-date');
+  if (dateEl) dateEl.textContent = formattedDate;
+
+  const totalAmount = (savedOrder && savedOrder.totalZAR) || amountParam || cartTotal();
+  const totalEl = $('#confirm-total');
+  if (totalEl) totalEl.textContent = formatZAR(totalAmount);
+
+  // Populate order items
+  const itemsListEl = $('#confirm-items-list');
+  const orderItems = (savedOrder && Array.isArray(savedOrder.items) && savedOrder.items.length)
+    ? savedOrder.items
+    : cart.map(({ id, qty }) => {
+        const p = findProduct(id);
+        return { id, name: p ? p.name : id, qty, lineTotal: p ? p.price * qty : 0 };
+      });
+
+  if (itemsListEl) {
+    if (orderItems.length) {
+      itemsListEl.innerHTML = orderItems.map((it) => `
+        <li class="confirm-item-row">
+          <span>${esc(it.name)} × ${it.qty}</span>
+          <strong>${formatZAR(it.lineTotal || (it.price * it.qty) || 0)}</strong>
+        </li>`).join('');
+    } else {
+      itemsListEl.innerHTML = `
+        <li class="confirm-item-row">
+          <span>Metsing.store Online Order (${esc(displayRef)})</span>
+          <strong>${totalAmount > 0 ? formatZAR(totalAmount) : 'Paid'}</strong>
+        </li>`;
     }
-  } else if (statusParam === 'cancelled' || statusParam === 'closed' || verifiedState === 'PaymentInitiationRequestCancelled') {
-    showToast('Stitch payment was cancelled. Your cart is still saved.', true);
+  }
+
+  // Populate customer details
+  const cust = (savedOrder && savedOrder.customer) || {};
+  const nameEl = $('#confirm-cust-name');
+  if (nameEl && cust.name) nameEl.textContent = cust.name;
+  const emailEl = $('#confirm-cust-email');
+  if (emailEl && cust.email) emailEl.textContent = cust.email;
+  const phoneEl = $('#confirm-cust-phone');
+  if (phoneEl && cust.phone) phoneEl.textContent = cust.phone;
+  const bizRow = $('#confirm-cust-biz-row');
+  const bizEl = $('#confirm-cust-biz');
+  if (bizRow && bizEl && cust.business) {
+    bizEl.textContent = cust.business;
+    bizRow.hidden = false;
+  }
+
+  // Build WhatsApp confirmation message
+  const baseWaMsg = (savedOrder && savedOrder.whatsappMsg)
+    || sessionStorage.getItem('metsing-pending-order')
+    || [
+      '🛍️ *Order Paid Online: Metsing.store*',
+      `Reference: *${displayRef}*`,
+      totalAmount > 0 ? `Total Paid: *${formatZAR(totalAmount)}*` : null,
+      cust.name ? `Name: ${cust.name}` : null,
+      cust.phone ? `Phone: ${cust.phone}` : null,
+    ].filter(Boolean).join('\n');
+
+  const waBtn = $('#confirm-wa-btn');
+  if (waBtn) {
+    const fullWaText = `${baseWaMsg}\n\n✅ *Paid online via Stitch* (Ref: ${displayRef})`;
+    waBtn.href = whatsappLink(fullWaText);
+  }
+
+  // Wire print & retry buttons
+  const printBtn = $('#confirm-print-btn');
+  if (printBtn) {
+    printBtn.addEventListener('click', () => window.print());
+  }
+  const retryBtn = $('#confirm-retry-btn');
+  if (retryBtn) {
+    retryBtn.addEventListener('click', () => openCart());
+  }
+
+  // Update UI for Cancelled vs Successful state
+  if (isCancelled) {
+    const iconEl = $('#confirm-icon');
+    if (iconEl) {
+      iconEl.classList.add('is-cancelled');
+      iconEl.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+    }
+    const titleEl = $('#confirm-title');
+    if (titleEl) titleEl.textContent = 'Payment not completed';
+    const subEl = $('#confirm-subtitle');
+    if (subEl) subEl.textContent = 'Your Stitch payment was cancelled or closed before completion. Your cart items are still saved so you can try again or order via WhatsApp.';
+    const statusPill = $('#confirm-status-pill');
+    if (statusPill) {
+      statusPill.classList.add('is-cancelled');
+      statusPill.textContent = 'Not Completed';
+    }
+    if (retryBtn) retryBtn.hidden = false;
+    if (waBtn) waBtn.textContent = 'Order on WhatsApp Instead';
+    showToast('Stitch payment was not completed. Your cart is still saved.', true);
   } else {
-    showToast('Checking Stitch payment status… Please message us on WhatsApp if you need help.');
+    // Payment succeeded — clear active cart
+    if (hasStitchReturn || savedOrder) {
+      sessionStorage.removeItem('metsing-pending-order');
+      cart = [];
+      saveCart();
+      renderCart();
+      if (hasStitchReturn) {
+        showToast(`✓ Payment confirmed (${displayRef})! Thank you for your order.`);
+      }
+    }
   }
 }
 
