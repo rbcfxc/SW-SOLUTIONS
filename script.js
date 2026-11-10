@@ -31,7 +31,6 @@ const CONFIG = {
   currency: 'R',
   storageKey: 'metsing-cart-v1',
   themeKey: 'metsing-theme',
-  stitchPaymentLink: 'https://express.stitch.money/metsingstore',
 };
 
 /* ---------------------------------------------------------
@@ -820,9 +819,9 @@ function orderOnWhatsApp(e) {
 
 /**
  * Stitch Money online payment checkout.
- * First attempts the server-side Stitch GraphQL API (/api/stitch/create-payment)
- * using Client ID test-bd36d70d-7cad-4f1c-bd11-978996e001c3.
- * If the server secret isn't configured yet, falls back to the Stitch Express link.
+ * Calls our Node backend (POST /api/stitch/create-payment) which
+ * authenticates with Stitch OAuth2 using Client ID test-bd36d70d-7cad-4f1c-bd11-978996e001c3
+ * and creates a payment initiation request on https://api.stitch.money/graphql.
  */
 async function payWithStitch() {
   if (!cart.length) return;
@@ -854,33 +853,19 @@ async function payWithStitch() {
     });
 
     const data = await res.json().catch(() => ({}));
-    if (res.ok && data.ok && data.paymentUrl) {
-      showToast('Redirecting to Stitch secure payment… 🔒');
-      window.location.href = data.paymentUrl;
-      return;
+    if (!res.ok || !data.ok || !data.paymentUrl) {
+      throw new Error(data.error || 'Could not start Stitch payment. Make sure STITCH_CLIENT_SECRET is set on Render.');
     }
 
-    // Fallback to Stitch Express link if server secret isn't set yet
-    const d = getFormData();
-    const total = cartTotal();
-    const refCode = `MS-${Date.now().toString().slice(-6)}`;
-    let payUrl = CONFIG.stitchPaymentLink;
-    const sep = payUrl.includes('?') ? '&' : '?';
-    payUrl += `${sep}amount=${encodeURIComponent(total)}&reference=${encodeURIComponent(refCode)}&payerReference=${encodeURIComponent(d.name || 'Metsing Customer')}`;
-
-    showToast('Redirecting to Stitch Express payment… 🔒');
-    window.location.href = payUrl;
+    showToast('Redirecting to Stitch secure payment… 🔒');
+    window.location.href = data.paymentUrl;
   } catch (err) {
-    // Fallback if static host without /api/stitch/create-payment
-    const d = getFormData();
-    const total = cartTotal();
-    const refCode = `MS-${Date.now().toString().slice(-6)}`;
-    let payUrl = CONFIG.stitchPaymentLink;
-    const sep = payUrl.includes('?') ? '&' : '?';
-    payUrl += `${sep}amount=${encodeURIComponent(total)}&reference=${encodeURIComponent(refCode)}&payerReference=${encodeURIComponent(d.name || 'Metsing Customer')}`;
-
-    showToast('Redirecting to Stitch Express payment… 🔒');
-    window.location.href = payUrl;
+    if (errorEl) errorEl.textContent = err.message;
+    showToast(err.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
   }
 }
 
