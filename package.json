@@ -1,0 +1,13 @@
+{
+  "name": "metsing-store",
+  "version": "1.0.0",
+  "description": "Metsing.store — Ready-made online stores, business websites, Company Consultation and Stitch Money payments",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "private": true
+}

@@ -31,6 +31,7 @@ const CONFIG = {
   currency: 'R',
   storageKey: 'metsing-cart-v1',
   themeKey: 'metsing-theme',
+  stitchPaymentLink: 'https://express.stitch.money/metsingstore',
 };
 
 /* ---------------------------------------------------------
@@ -818,16 +819,80 @@ function orderOnWhatsApp(e) {
 }
 
 /**
- * Optional: PayFast checkout (placeholder)
- * -------------------------------------------------------
- * To enable, create a PayFast merchant account, then replace the
- * placeholder below. NEVER expose your passphrase in front-end code:
- * generate the signature on a server.
+ * Stitch Money online payment checkout via Stitch Express link.
+ * Validates checkout details, sends order info to WhatsApp, then
+ * redirects customer to the secure Stitch Express payment page.
  */
-function payWithPayFast() {
+function payWithStitch() {
   if (!cart.length) return;
   if (!validateForm()) return;
-  showToast('Online card payments are coming soon. Please order on WhatsApp for now.');
+
+  const btn = $('#checkout-stitch') || $('#checkout-payfast');
+  const d = getFormData();
+  const total = cartTotal();
+  const refCode = `MS-${Date.now().toString().slice(-6)}`;
+
+  showToast('Opening WhatsApp order & redirecting to Stitch payment… 🔒');
+
+  // Notify WhatsApp with the full order summary and generated payment reference
+  const waMsg = `${buildOrderMessage()}\n\n💳 *Payment method:* Stitch Express (${CONFIG.stitchPaymentLink})\n*Payment Ref:* ${refCode}`;
+  window.open(whatsappLink(waMsg), '_blank', 'noopener');
+
+  // Build Stitch Express link with amount/reference parameters
+  let payUrl = CONFIG.stitchPaymentLink;
+  const sep = payUrl.includes('?') ? '&' : '?';
+  payUrl += `${sep}amount=${encodeURIComponent(total)}&reference=${encodeURIComponent(refCode)}&payerReference=${encodeURIComponent(d.name || 'Metsing Customer')}`;
+
+  setTimeout(() => {
+    window.location.href = payUrl;
+  }, 800);
+}
+
+/**
+ * Handle customer returning from Stitch hosted payment page
+ * URL query params from Stitch: ?stitch_return=1&ref=...&id=...&status=complete|cancelled|closed
+ */
+async function handleStitchReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.get('stitch_return')) return;
+
+  const stitchId = params.get('id');
+  const statusParam = (params.get('status') || '').toLowerCase();
+  const ref = params.get('ref') || '';
+
+  // Clean query parameters from address bar without reloading
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  let verifiedState = statusParam;
+  if (stitchId) {
+    try {
+      const res = await fetch(`/api/stitch/status?id=${encodeURIComponent(stitchId)}`);
+      const data = await res.json();
+      if (data.ok && data.state) {
+        verifiedState = data.state;
+      }
+    } catch (e) { /* fallback to status query param */ }
+  }
+
+  if (verifiedState === 'PaymentInitiationRequestCompleted' || statusParam === 'complete') {
+    const savedMsg = sessionStorage.getItem('metsing-pending-order') || '';
+    sessionStorage.removeItem('metsing-pending-order');
+    cart = [];
+    saveCart();
+    renderCart();
+    showToast(`✓ Payment received (${ref || 'Stitch'})! Thank you for your order.`);
+    if (savedMsg) {
+      setTimeout(() => {
+        window.open(whatsappLink(`${savedMsg}\n\n✅ *Paid online via Stitch* (Ref: ${ref || stitchId || 'confirmed'})`), '_blank', 'noopener');
+      }, 900);
+    }
+  } else if (statusParam === 'cancelled' || statusParam === 'closed' || verifiedState === 'PaymentInitiationRequestCancelled') {
+    showToast('Stitch payment was cancelled. Your cart is still saved.', true);
+  } else {
+    showToast('Checking Stitch payment status… Please message us on WhatsApp if you need help.');
+  }
 }
 
 /* ---------------------------------------------------------
@@ -1001,8 +1066,9 @@ function init() {
       input.addEventListener('input', () => input.removeAttribute('aria-invalid'));
     });
   }
-  const payfastBtn = $('#checkout-payfast');
-  if (payfastBtn) payfastBtn.addEventListener('click', payWithPayFast);
+  const stitchBtn = $('#checkout-stitch') || $('#checkout-payfast');
+  if (stitchBtn) stitchBtn.addEventListener('click', payWithStitch);
+  handleStitchReturn();
 
   // Mobile menu
   const menuBtn = $('#menu-toggle');
