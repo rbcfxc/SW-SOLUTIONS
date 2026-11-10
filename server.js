@@ -103,7 +103,7 @@ let cachedToken = null;
 let cachedTokenExpiresAt = 0;
 
 const STITCH_CLIENT_ID = (process.env.STITCH_CLIENT_ID || 'test-bd36d70d-7cad-4f1c-bd11-978996e001c3').trim();
-const STITCH_EXPRESS_BASE = process.env.STITCH_EXPRESS_URL || 'https://api.express.stitch.money/api/v1';
+const STITCH_EXPRESS_BASE = process.env.STITCH_EXPRESS_URL || 'https://express.stitch.money/api/v1';
 
 function getCleanSecret() {
   return (process.env.STITCH_CLIENT_SECRET || '').trim().replace(/^['"]|['"]$/g, '');
@@ -255,7 +255,12 @@ async function createStitchPaymentRequest({ totalZAR, customer, externalReferenc
     if (expRes.ok && linkUrl) {
       return { id: linkObj.id || externalReference, url: linkUrl, isExpress: true };
     }
-    throw new Error(expData.error?.message || expData.message || `Stitch Express error (HTTP ${expRes.status})`);
+    const expErr = (Array.isArray(expData.generalErrors) && expData.generalErrors.join(', '))
+      || (expData.fieldErrors && Object.keys(expData.fieldErrors).length && JSON.stringify(expData.fieldErrors))
+      || expData.error?.message
+      || expData.message
+      || `Stitch Express error (HTTP ${expRes.status})`;
+    throw new Error(expErr);
   }
 
   // Otherwise use Stitch GraphQL API (api.stitch.money/graphql)
