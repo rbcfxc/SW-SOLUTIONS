@@ -102,10 +102,15 @@ const CATALOG = {
 let cachedToken = null;
 let cachedTokenExpiresAt = 0;
 
-const STITCH_CLIENT_ID = process.env.STITCH_CLIENT_ID || 'test-bd36d70d-7cad-4f1c-bd11-978996e001c3';
+const STITCH_CLIENT_ID = (process.env.STITCH_CLIENT_ID || 'test-bd36d70d-7cad-4f1c-bd11-978996e001c3').trim();
+const STITCH_EXPRESS_BASE = process.env.STITCH_EXPRESS_URL || 'https://api.express.stitch.money/api/v1';
+
+function getCleanSecret() {
+  return (process.env.STITCH_CLIENT_SECRET || '').trim().replace(/^['"]|['"]$/g, '');
+}
 
 function isStitchConfigured() {
-  const secret = process.env.STITCH_CLIENT_SECRET;
+  const secret = getCleanSecret();
   const isTest = STITCH_CLIENT_ID.startsWith('test-');
   const acc = process.env.STITCH_BENEFICIARY_ACCOUNT_NUMBER || (isTest ? '62000000000' : '');
   return Boolean(
@@ -115,17 +120,87 @@ function isStitchConfigured() {
   );
 }
 
+/** Build an RS256 signed JWT assertion if STITCH_CLIENT_SECRET is a PEM private key */
+function buildPrivateKeyJwt(clientId, pemKey, audience) {
+  const b64url = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url');
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const payload = {
+    iss: clientId,
+    sub: clientId,
+    aud: audience,
+    iat: now,
+    nbf: now,
+    exp: now + 300,
+    jti: crypto.randomUUID(),
+  };
+  const unsigned = `${b64url(header)}.${b64url(payload)}`;
+  const normalizedPem = pemKey.replace(/\\n/g, '\n');
+  const signature = crypto.sign('RSA-SHA256', Buffer.from(unsigned), normalizedPem).toString('base64url');
+  return `${unsigned}.${signature}`;
+}
+
 async function getStitchClientToken() {
   if (cachedToken && Date.now() < cachedTokenExpiresAt - 30000) {
     return cachedToken;
   }
 
+  const secret = getCleanSecret();
+  if (secret === STITCH_CLIENT_ID) {
+    throw new Error('STITCH_CLIENT_SECRET is set to the same value as STITCH_CLIENT_ID. Please paste your actual Client Secret (not the Client ID) in Render -> Environment.');
+  }
+
+  // 1. Try Stitch Express API token endpoint first (https://api.express.stitch.money/api/v1/token)
+  try {
+    const expRes = await fetch(`${STITCH_EXPRESS_BASE}/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        clientId: STITCH_CLIENT_ID,
+        clientSecret: secret,
+        scope: 'client_paymentrequest',
+      }),
+    });
+    const expData = await expRes.json().catch(() => ({}));
+    const expToken = expData.data?.accessToken || expData.data?.token || expData.access_token || expData.accessToken || expData.token;
+    if (expRes.ok && expToken) {
+      cachedToken = { token: expToken, mode: 'express' };
+      cachedTokenExpiresAt = Date.now() + 10 * 60 * 1000;
+      return cachedToken;
+    }
+  } catch (e) { /* continue to OAuth2 connect/token */ }
+
+  // 2. If secret is a PEM private key, use private_key_jwt on secure.stitch.money/connect/token
+  if (secret.includes('BEGIN') && secret.includes('PRIVATE KEY')) {
+    const jwt = buildPrivateKeyJwt(STITCH_CLIENT_ID, secret, STITCH_TOKEN_URL);
+    const body = new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: STITCH_CLIENT_ID,
+      scope: 'client_paymentrequest',
+      audience: STITCH_TOKEN_URL,
+      client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+      client_assertion: jwt,
+    });
+    const res = await fetch(STITCH_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.access_token) {
+      throw new Error(data.error_description || data.error || `Stitch JWT auth failed (HTTP ${res.status})`);
+    }
+    cachedToken = { token: data.access_token, mode: 'graphql' };
+    cachedTokenExpiresAt = Date.now() + (Number(data.expires_in) || 900) * 1000;
+    return cachedToken;
+  }
+
+  // 3. Standard OAuth2 client_secret_post on secure.stitch.money/connect/token
   const body = new URLSearchParams({
     grant_type: 'client_credentials',
     client_id: STITCH_CLIENT_ID,
-    client_secret: process.env.STITCH_CLIENT_SECRET,
+    client_secret: secret,
     scope: 'client_paymentrequest',
-    audience: STITCH_TOKEN_URL,
   });
 
   const res = await fetch(STITCH_TOKEN_URL, {
@@ -136,10 +211,12 @@ async function getStitchClientToken() {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.access_token) {
-    throw new Error(data.error_description || data.error || `Failed to obtain Stitch token (HTTP ${res.status})`);
+    throw new Error(
+      `${data.error_description || data.error || 'invalid_client'} — Check that STITCH_CLIENT_ID (${STITCH_CLIENT_ID}) and STITCH_CLIENT_SECRET in Render match your Stitch API credentials.`
+    );
   }
 
-  cachedToken = data.access_token;
+  cachedToken = { token: data.access_token, mode: 'graphql' };
   cachedTokenExpiresAt = Date.now() + (Number(data.expires_in) || 900) * 1000;
   return cachedToken;
 }
@@ -153,8 +230,36 @@ function sanitizeReference(str, maxLen) {
 }
 
 async function createStitchPaymentRequest({ totalZAR, customer, externalReference }) {
-  const accessToken = await getStitchClientToken();
+  const auth = await getStitchClientToken();
+  const shortRef = externalReference.slice(-8).toUpperCase();
 
+  // If authenticated via Stitch Express API (api.express.stitch.money/api/v1)
+  if (auth.mode === 'express') {
+    const expRes = await fetch(`${STITCH_EXPRESS_BASE}/payment-links`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${auth.token}`,
+      },
+      body: JSON.stringify({
+        amount: Math.round(totalZAR * 100), // cents
+        merchantReference: `MS-${shortRef}`,
+        payerName: sanitizeReference(customer.name, 40),
+        payerEmailAddress: customer.email,
+        payerPhoneNumber: customer.phone,
+      }),
+    });
+    const expData = await expRes.json().catch(() => ({}));
+    const linkObj = expData.data?.payment || expData.data || expData;
+    const linkUrl = linkObj?.link || linkObj?.url || linkObj?.paymentUrl;
+    if (expRes.ok && linkUrl) {
+      return { id: linkObj.id || externalReference, url: linkUrl, isExpress: true };
+    }
+    throw new Error(expData.error?.message || expData.message || `Stitch Express error (HTTP ${expRes.status})`);
+  }
+
+  // Otherwise use Stitch GraphQL API (api.stitch.money/graphql)
   const query = `
     mutation CreatePaymentRequest(
       $amount: MoneyInput!,
@@ -189,7 +294,6 @@ async function createStitchPaymentRequest({ totalZAR, customer, externalReferenc
     }
   `;
 
-  const shortRef = externalReference.slice(-8).toUpperCase();
   const variables = {
     amount: {
       quantity: totalZAR.toFixed(2),
@@ -207,7 +311,7 @@ async function createStitchPaymentRequest({ totalZAR, customer, externalReferenc
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+      Authorization: `Bearer ${auth.token}`,
     },
     body: JSON.stringify({ query, variables }),
   });
@@ -227,7 +331,21 @@ async function createStitchPaymentRequest({ totalZAR, customer, externalReferenc
 }
 
 async function getStitchPaymentStatus(paymentId) {
-  const accessToken = await getStitchClientToken();
+  const auth = await getStitchClientToken();
+  if (auth.mode === 'express') {
+    const expRes = await fetch(`${STITCH_EXPRESS_BASE}/payment-links/${encodeURIComponent(paymentId)}`, {
+      method: 'GET',
+      headers: { Accept: 'application/json', Authorization: `Bearer ${auth.token}` },
+    });
+    const expData = await expRes.json().catch(() => ({}));
+    const p = expData.data?.payment || expData.data || expData;
+    return {
+      id: p.id || paymentId,
+      externalReference: p.merchantReference,
+      amount: p.amount,
+      state: { __typename: p.status === 'paid' || p.status === 'completed' ? 'PaymentInitiationRequestCompleted' : p.status },
+    };
+  }
 
   const query = `
     query GetPaymentRequestStatus($id: ID!) {
@@ -265,7 +383,7 @@ async function getStitchPaymentStatus(paymentId) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+      Authorization: `Bearer ${auth.token}`,
     },
     body: JSON.stringify({ query, variables: { id: paymentId } }),
   });
