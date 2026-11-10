@@ -111,12 +111,11 @@ function getCleanSecret() {
 
 function isStitchConfigured() {
   const secret = getCleanSecret();
-  const isTest = STITCH_CLIENT_ID.startsWith('test-');
-  const acc = process.env.STITCH_BENEFICIARY_ACCOUNT_NUMBER || (isTest ? '62000000000' : '');
   return Boolean(
     STITCH_CLIENT_ID &&
-    secret && secret !== 'your_stitch_client_secret_here' &&
-    acc && acc !== '00000000000'
+    STITCH_CLIENT_ID !== 'your_stitch_client_id_here' &&
+    secret &&
+    secret !== 'your_stitch_client_secret_here'
   );
 }
 
