@@ -148,7 +148,7 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; letter-spacing:
   display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px;
   background: var(--green-800); color: var(--accent); font-size: 1.1rem;
 }
-.logo-mark-img { width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0; }
+.logo-mark-img { width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0; background: #FFFFFF; object-fit: contain; border: 1px solid var(--border); }
 [data-theme="dark"] .logo-mark { background: var(--accent); color: #FFFFFF; }
 .logo-text span { color: var(--green-500); }
 [data-theme="dark"] .logo-text span { color: var(--accent); }
