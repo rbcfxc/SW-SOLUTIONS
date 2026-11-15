@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-15T04:25:00.114Z",
+  "updatedAt": "2026-11-15T04:25:58.133Z",
   "settings": {
     "whatsappNumber": "27644997135",
     "whatsappDisplay": "+27 64 499 7135",
@@ -357,7 +357,7 @@
       "name": "Payment Gateway Setup",
       "price": 400,
       "icon": "💳",
-      "description": "Accept card & instant EFT with PayFast, Yoco or Ozow."
+      "description": "Accept card & instant EFT with PayFast, Yoco, Ozow or Stitch."
     },
     {
       "id": "add-care",
