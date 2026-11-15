@@ -1026,3 +1026,26 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; letter-spacing:
   .legal-doc { padding: 3rem 3rem; }
   .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
 }
+
+
+/* ---------- 24. Cookie banner ---------- */
+.cookie-banner {
+  position: fixed; left: 1rem; right: 1rem; bottom: 1rem; z-index: 250;
+  max-width: 760px; margin: 0 auto;
+  display: grid; gap: .9rem; padding: 1.1rem 1.25rem;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  animation: slideIn .4s var(--ease);
+}
+.cookie-text strong { font-family: var(--font-display); font-size: 1.05rem; }
+.cookie-text p { font-size: .88rem; color: var(--muted); margin-top: .25rem; }
+.cookie-text a { text-decoration: underline; text-underline-offset: 3px; font-weight: 600; color: var(--text); }
+.cookie-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.cookie-actions .btn { flex: 1 1 160px; }
+@media (min-width: 640px) {
+  .cookie-banner { grid-template-columns: 1fr auto; align-items: center; }
+  .cookie-actions { flex-wrap: nowrap; }
+  .cookie-actions .btn { flex: none; }
+}
+@media print { .cookie-banner { display: none !important; } }

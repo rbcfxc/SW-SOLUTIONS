@@ -1164,6 +1164,77 @@ function initReveal() {
   els.forEach((el) => io.observe(el));
 }
 
+
+/* ---------------------------------------------------------
+   Cookie consent banner
+   Choice is stored in localStorage ('metsing-cookie-consent').
+   Non-essential scripts (analytics / ads) must only be loaded
+   from onConsent() after the visitor has accepted them.
+   --------------------------------------------------------- */
+const CONSENT_KEY = 'metsing-cookie-consent';
+
+function getConsent() {
+  try {
+    const raw = localStorage.getItem(CONSENT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function onConsent(consent) {
+  // Future: load analytics only when consent.analytics === true,
+  // and advertising pixels only when consent.marketing === true.
+  window.metsingConsent = consent;
+  document.dispatchEvent(new CustomEvent('metsing:consent', { detail: consent }));
+}
+
+function saveConsent(all) {
+  const consent = { analytics: all, marketing: all, date: new Date().toISOString() };
+  try { localStorage.setItem(CONSENT_KEY, JSON.stringify(consent)); } catch (e) { /* storage unavailable */ }
+  onConsent(consent);
+}
+
+function closeCookieBanner() {
+  const el = $('#cookie-banner');
+  if (el) el.remove();
+}
+
+function showCookieBanner() {
+  if ($('#cookie-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'cookie-banner';
+  banner.className = 'cookie-banner';
+  banner.setAttribute('role', 'dialog');
+  banner.setAttribute('aria-modal', 'false');
+  banner.setAttribute('aria-labelledby', 'cookie-title');
+  banner.innerHTML = `
+    <div class="cookie-text">
+      <strong id="cookie-title">🍪 Cookies &amp; privacy</strong>
+      <p>I use only the browser storage needed to run the site (cart, theme). With your permission I may also use analytics and advertising cookies in future. You can accept or reject these at any time. <a href="/cookie-policy/">Cookie Policy</a></p>
+    </div>
+    <div class="cookie-actions">
+      <button type="button" class="btn btn-outline btn-sm" id="cookie-reject">Reject non-essential</button>
+      <button type="button" class="btn btn-primary btn-sm" id="cookie-accept">Accept all</button>
+    </div>`;
+  document.body.appendChild(banner);
+  $('#cookie-accept').addEventListener('click', () => { saveConsent(true); closeCookieBanner(); showToast('Cookie preferences saved.'); });
+  $('#cookie-reject').addEventListener('click', () => { saveConsent(false); closeCookieBanner(); showToast('Only essential storage will be used.'); });
+}
+
+function initCookieBanner() {
+  const existing = getConsent();
+  if (existing) onConsent(existing);
+  else showCookieBanner();
+
+  // "Cookie settings" link in every footer's Legal list
+  const legalList = $('nav[aria-label="Legal"] ul');
+  if (legalList && !$('#cookie-settings-link')) {
+    const li = document.createElement('li');
+    li.innerHTML = '<a href="#" id="cookie-settings-link" role="button">Cookie settings</a>';
+    legalList.appendChild(li);
+    li.querySelector('a').addEventListener('click', (e) => { e.preventDefault(); showCookieBanner(); });
+  }
+}
+
 /* ---------------------------------------------------------
    13. Init & event wiring
    --------------------------------------------------------- */
@@ -1175,6 +1246,7 @@ function init() {
   renderCart();
   initFAQ();
   initReveal();
+  initCookieBanner();
 
   // Theme toggle
   setTheme(document.documentElement.getAttribute('data-theme') || 'light');
