@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-15T04:35:41.118Z",
+  "updatedAt": "2026-11-15T06:55:58.831Z",
   "settings": {
     "whatsappNumber": "27644997135",
     "whatsappDisplay": "+27 64 499 7135",
@@ -30,7 +30,7 @@
         "label": "once-off"
       },
       {
-        "value": "8",
+        "value": "3",
         "label": "store niches"
       }
     ]
