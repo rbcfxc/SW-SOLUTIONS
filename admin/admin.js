@@ -84,7 +84,14 @@
     $('#admin-dashboard-view').hidden = false;
     $('#admin-logout-btn').hidden = false;
     if (data.usingDefaultPassword) $('#dash-default-pw-banner').hidden = false;
-    if (data.dataFile) $('#data-file-path').textContent = `Active storage file: ${data.dataFile}`;
+    if (data.dataFile) {
+      const modeLabel = data.githubConfigured
+        ? 'Permanent (auto-synced to GitHub)'
+        : data.hasPersistentDisk
+          ? 'Permanent (Render Disk)'
+          : 'Temporary on free Render — add GITHUB_TOKEN in Render Environment Variables to make edits permanent across restarts';
+      $('#data-file-path').textContent = `Storage: ${modeLabel} (${data.dataFile})`;
+    }
     updateLastSavedLabel();
     renderAllEditors();
     markDirty(false);
@@ -515,7 +522,13 @@
       state.content = data.content;
       markDirty(false);
       updateLastSavedLabel();
-      showToast('✓ Live website updated!');
+      if (data.persistedToGitHub) {
+        showToast('✓ Live website updated & saved permanently to GitHub!');
+      } else if (data.githubError) {
+        showToast(`Saved live, but GitHub sync failed: ${data.githubError}`);
+      } else {
+        showToast('✓ Live website updated! (Add GITHUB_TOKEN in Render for permanent storage)');
+      }
     } catch (err) {
       showToast(err.message);
     } finally {

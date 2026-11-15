@@ -1256,19 +1256,23 @@ function applySiteContent(data) {
       if (ft) ft.textContent = data.settings.footerTag;
     }
     const ann = data.settings.announcement;
+    const existingBar = $('#announcement-bar');
     if (ann && ann.enabled && ann.text) {
-      let bar = $('#announcement-bar');
+      let bar = existingBar;
       if (!bar) {
         bar = document.createElement('div');
         bar.id = 'announcement-bar';
         bar.className = 'announcement-bar';
         const nav = $('#navbar');
         if (nav && nav.parentNode) nav.parentNode.insertBefore(bar, nav);
+        else document.body.prepend(bar);
       }
       const linkHtml = ann.linkText && ann.linkUrl
         ? ` <a href="${esc(ann.linkUrl)}">${esc(ann.linkText)}</a>`
         : '';
       bar.innerHTML = `<span>${esc(ann.text)}</span>${linkHtml}`;
+    } else if (existingBar) {
+      existingBar.remove();
     }
   }
 

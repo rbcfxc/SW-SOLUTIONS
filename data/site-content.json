@@ -8,8 +8,8 @@
     "currency": "R",
     "footerTag": "Ready-made online stores, business websites and Company Consultation for South African entrepreneurs.",
     "announcement": {
-      "enabled": false,
-      "text": "",
+      "enabled": true,
+      "text": "We are currently away, we will be back soon",
       "linkText": "",
       "linkUrl": ""
     }

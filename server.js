@@ -588,6 +588,74 @@ function isAdminAuthenticated(req) {
   return verifyAdminToken(cookies[ADMIN_COOKIE_NAME]);
 }
 
+const GITHUB_TOKEN = (process.env.GITHUB_TOKEN || '').trim();
+const GITHUB_REPO = (process.env.GITHUB_REPO || 'rbcfxc/SW-SOLUTIONS').trim();
+const GITHUB_BRANCH = (process.env.GITHUB_BRANCH || 'main').trim();
+const GITHUB_FILE_PATH = (process.env.GITHUB_FILE_PATH || 'data/site-content.json').trim();
+
+async function syncContentToGitHub(content) {
+  if (!GITHUB_TOKEN) return { synced: false, reason: 'GITHUB_TOKEN not set' };
+  const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+  const headers = {
+    Authorization: `Bearer ${GITHUB_TOKEN}`,
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'Metsing-Store-Admin/1.0',
+  };
+
+  let sha = null;
+  const getRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(GITHUB_BRANCH)}`, { headers });
+  if (getRes.ok) {
+    const getJson = await getRes.json().catch(() => ({}));
+    sha = getJson.sha || null;
+  }
+
+  const encoded = Buffer.from(JSON.stringify(content, null, 2), 'utf8').toString('base64');
+  const putBody = {
+    message: `Update live site content via Admin (${new Date().toISOString()}) [skip ci]`,
+    content: encoded,
+    branch: GITHUB_BRANCH,
+  };
+  if (sha) putBody.sha = sha;
+
+  const putRes = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify(putBody),
+  });
+  if (!putRes.ok) {
+    const errData = await putRes.json().catch(() => ({}));
+    throw new Error(errData.message || `GitHub sync failed (HTTP ${putRes.status})`);
+  }
+  return { synced: true };
+}
+
+async function syncFromGitHubOnBoot() {
+  if (!GITHUB_TOKEN) return;
+  try {
+    const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}?ref=${encodeURIComponent(GITHUB_BRANCH)}`;
+    const res = await fetch(apiUrl, {
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'Metsing-Store-Admin/1.0',
+      },
+    });
+    if (!res.ok) return;
+    const data = await res.json().catch(() => ({}));
+    if (!data.content) return;
+    const remote = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+    const local = loadSiteContent();
+    const remoteTime = remote.updatedAt ? Date.parse(remote.updatedAt) : 0;
+    const localTime = local.updatedAt ? Date.parse(local.updatedAt) : 0;
+    if (remoteTime > localTime) {
+      fs.writeFileSync(SITE_DATA_FILE, JSON.stringify(remote, null, 2), 'utf8');
+      console.log('[SiteData] Synced newer content from GitHub on startup.');
+    }
+  } catch (err) {
+    console.warn('[SiteData boot sync skipped]:', err.message);
+  }
+}
+
 function serveStaticFile(req, res, pathname) {
   if (BLOCKED_FILES.has(pathname) || pathname.startsWith('/.') || pathname.startsWith('/data/')) {
     return serve404(res);
@@ -614,7 +682,7 @@ function serveStaticFile(req, res, pathname) {
 
   const ext = path.extname(fullPath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-  const cacheControl = (ext === '.html' || ext === '.xml' || ext === '.txt')
+  const cacheControl = (ext === '.html' || ext === '.css' || ext === '.js' || ext === '.xml' || ext === '.txt')
     ? 'public, max-age=0, must-revalidate'
     : 'public, max-age=604800';
 
@@ -859,6 +927,8 @@ const server = http.createServer(async (req, res) => {
       recentOrders: recentOrders.slice(0, 50),
       stitchConfigured: isStitchConfigured(),
       usingDefaultPassword: USING_DEFAULT_ADMIN_PASSWORD,
+      githubConfigured: Boolean(GITHUB_TOKEN),
+      hasPersistentDisk: Boolean(process.env.SITE_DATA_FILE),
       dataFile: SITE_DATA_FILE,
     });
   }
@@ -874,7 +944,24 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 400, { ok: false, error: 'Invalid site content payload (missing products array).' });
       }
       const saved = saveSiteContent(body);
-      return sendJson(res, 200, { ok: true, content: saved });
+      let persistedToGitHub = false;
+      let githubError = null;
+      if (GITHUB_TOKEN) {
+        try {
+          await syncContentToGitHub(saved);
+          persistedToGitHub = true;
+        } catch (ghErr) {
+          console.error('[GitHub sync error]:', ghErr.message);
+          githubError = ghErr.message;
+        }
+      }
+      return sendJson(res, 200, {
+        ok: true,
+        content: saved,
+        persistedToGitHub,
+        hasPersistentDisk: Boolean(process.env.SITE_DATA_FILE),
+        githubError,
+      });
     } catch (err) {
       return sendJson(res, 400, { ok: false, error: err.message || 'Could not save site content.' });
     }
@@ -888,7 +975,16 @@ const server = http.createServer(async (req, res) => {
     try {
       const defaults = JSON.parse(fs.readFileSync(DEFAULT_SITE_DATA_FILE, 'utf8'));
       const saved = saveSiteContent(defaults);
-      return sendJson(res, 200, { ok: true, content: saved });
+      let persistedToGitHub = false;
+      if (GITHUB_TOKEN) {
+        try {
+          await syncContentToGitHub(saved);
+          persistedToGitHub = true;
+        } catch (ghErr) {
+          console.error('[GitHub reset sync error]:', ghErr.message);
+        }
+      }
+      return sendJson(res, 200, { ok: true, content: saved, persistedToGitHub });
     } catch (err) {
       return sendJson(res, 500, { ok: false, error: err.message });
     }
@@ -905,4 +1001,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`Metsing.store server running on http://localhost:${PORT}`);
   console.log(`Stitch API configured: ${isStitchConfigured() ? 'YES' : 'NO (set STITCH_CLIENT_ID, STITCH_CLIENT_SECRET, STITCH_BENEFICIARY_ACCOUNT_NUMBER)'}`);
+  syncFromGitHubOnBoot();
 });

@@ -1052,13 +1052,15 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; letter-spacing:
 
 /* ---------- 25. Announcement bar (controlled from /admin/) ---------- */
 .announcement-bar {
-  background: var(--green-900);
+  position: relative;
+  z-index: 110;
+  background: var(--green-800);
   color: #fff;
   text-align: center;
-  padding: .55rem 1rem;
-  font-size: .88rem;
-  font-weight: 500;
-  border-bottom: 1px solid rgba(255, 255, 255, .1);
+  padding: .65rem 1rem;
+  font-size: .92rem;
+  font-weight: 600;
+  border-bottom: 2px solid var(--accent);
 }
 .announcement-bar a {
   color: var(--accent);
