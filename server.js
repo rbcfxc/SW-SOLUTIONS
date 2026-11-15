@@ -228,33 +228,59 @@ function sanitizeReference(str, maxLen) {
   return (cleaned || 'Metsing').slice(0, maxLen);
 }
 
-async function createStitchPaymentRequest({ totalZAR, customer, externalReference }) {
+async function createStitchPaymentRequest({ totalZAR, customer, externalReference, baseUrl }) {
   const auth = await getStitchClientToken();
   const shortRef = externalReference.slice(-8).toUpperCase();
 
   // If authenticated via Stitch Express API (api.express.stitch.money/api/v1)
   if (auth.mode === 'express') {
-    const expRes = await fetch(`${STITCH_EXPRESS_BASE}/payment-links`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: `Bearer ${auth.token}`,
-      },
-      body: JSON.stringify({
-        amount: Math.round(totalZAR * 100), // cents
-        merchantReference: `MS-${shortRef}`,
-        payerName: sanitizeReference(customer.name, 40),
-        payerEmailAddress: customer.email,
-        payerPhoneNumber: customer.phone,
-      }),
-    });
-    const expData = await expRes.json().catch(() => ({}));
-    const linkObj = expData.data?.payment || expData.data || expData;
-    const linkUrl = linkObj?.link || linkObj?.url || linkObj?.paymentUrl;
-    if (expRes.ok && linkUrl) {
-      return { id: linkObj.id || externalReference, url: linkUrl, isExpress: true };
+    const cleanBase = (baseUrl || '').replace(/\/+$/, '');
+    const returnUrl = cleanBase
+      ? `${cleanBase}/payment-success/?stitch_return=1&ref=${encodeURIComponent(externalReference)}&amount=${encodeURIComponent(totalZAR)}`
+      : '';
+    const cancelReturnUrl = cleanBase
+      ? `${cleanBase}/payment-success/?stitch_return=1&status=cancelled&ref=${encodeURIComponent(externalReference)}&amount=${encodeURIComponent(totalZAR)}`
+      : '';
+
+    const basePayload = {
+      amount: Math.round(totalZAR * 100), // cents
+      merchantReference: `MS-${shortRef}`,
+      payerName: sanitizeReference(customer.name, 40),
+      payerEmailAddress: customer.email,
+      payerPhoneNumber: customer.phone,
+    };
+
+    const payloadVariants = cleanBase
+      ? [
+          { ...basePayload, redirectUrl: returnUrl, cancelUrl: cancelReturnUrl, failureUrl: cancelReturnUrl },
+          { ...basePayload, redirectUrl: returnUrl },
+          basePayload,
+        ]
+      : [basePayload];
+
+    let expRes;
+    let expData = {};
+    for (const payload of payloadVariants) {
+      expRes = await fetch(`${STITCH_EXPRESS_BASE}/payment-links`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      expData = await expRes.json().catch(() => ({}));
+      const linkObj = expData.data?.payment || expData.data || expData;
+      const linkUrl = linkObj?.link || linkObj?.url || linkObj?.paymentUrl;
+      if (expRes.ok && linkUrl) {
+        return { id: linkObj.id || externalReference, url: linkUrl, isExpress: true };
+      }
+      if (expRes.status !== 400 && expRes.status !== 422) {
+        break;
+      }
     }
+
     const expErr = (Array.isArray(expData.generalErrors) && expData.generalErrors.join(', '))
       || (expData.fieldErrors && Object.keys(expData.fieldErrors).length && JSON.stringify(expData.fieldErrors))
       || expData.error?.message
@@ -771,11 +797,13 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      const baseUrl = (process.env.PUBLIC_BASE_URL || `${proto}://${host}`).replace(/\/+$/, '');
       const externalReference = `ms-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
       const paymentRequest = await createStitchPaymentRequest({
         totalZAR,
         customer,
         externalReference,
+        baseUrl,
       });
 
       saveRecentOrder({
@@ -793,7 +821,6 @@ const server = http.createServer(async (req, res) => {
         createdAt: new Date().toISOString(),
       });
 
-      const baseUrl = (process.env.PUBLIC_BASE_URL || `${proto}://${host}`).replace(/\/+$/, '');
       const redirectUri = `${baseUrl}/payment-success/?stitch_return=1&ref=${encodeURIComponent(externalReference)}&id=${encodeURIComponent(paymentRequest.id)}&amount=${encodeURIComponent(totalZAR)}`;
 
       const sep = paymentRequest.url.includes('?') ? '&' : '?';
