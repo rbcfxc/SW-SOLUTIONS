@@ -60,6 +60,7 @@
     if (data.authenticated) {
       await loadDashboard();
     } else {
+      document.body.classList.add('is-login-view');
       $('#admin-login-view').hidden = false;
       $('#admin-dashboard-view').hidden = true;
       $('#admin-logout-btn').hidden = true;
@@ -70,6 +71,7 @@
   async function loadDashboard() {
     const res = await fetch('/api/admin/content', { cache: 'no-store' });
     if (res.status === 401) {
+      document.body.classList.add('is-login-view');
       $('#admin-login-view').hidden = false;
       $('#admin-dashboard-view').hidden = true;
       $('#admin-logout-btn').hidden = true;
@@ -80,6 +82,7 @@
 
     state.content = data.content;
     state.recentOrders = data.recentOrders || [];
+    document.body.classList.remove('is-login-view');
     $('#admin-login-view').hidden = true;
     $('#admin-dashboard-view').hidden = false;
     $('#admin-logout-btn').hidden = false;
@@ -133,6 +136,7 @@
   $('#admin-logout-btn').addEventListener('click', async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
     state.content = null;
+    document.body.classList.add('is-login-view');
     $('#admin-dashboard-view').hidden = true;
     $('#admin-login-view').hidden = false;
     $('#admin-logout-btn').hidden = true;

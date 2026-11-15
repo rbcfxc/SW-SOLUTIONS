@@ -1,3 +1,28 @@
+[hidden] {
+  display: none !important;
+}
+
+body.is-login-view {
+  position: relative;
+  min-height: 100vh;
+}
+body.is-login-view::before {
+  content: "";
+  position: fixed;
+  inset: -24px;
+  z-index: -2;
+  background: #072A1F url("login-bg.jpg") center / cover no-repeat;
+  filter: blur(10px) saturate(1.1);
+  transform: scale(1.05);
+}
+body.is-login-view::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, rgba(7, 42, 31, 0.58), rgba(11, 61, 46, 0.42));
+}
+
 .admin-badge {
   font-size: .72rem;
   font-weight: 700;
@@ -40,12 +65,18 @@
 
 .admin-login-card {
   max-width: 460px;
-  margin: 3rem auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  margin: 3.5rem auto;
+  background: rgba(255, 255, 255, 0.90);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: var(--radius-lg);
   padding: 2.25rem 1.75rem;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
+}
+[data-theme="dark"] .admin-login-card {
+  background: rgba(14, 31, 24, 0.86);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 .admin-login-card h1 {
   font-size: 1.75rem;
