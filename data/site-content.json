@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-15T06:58:28.766Z",
+  "updatedAt": "2026-11-15T07:00:02.724Z",
   "settings": {
     "whatsappNumber": "27644997135",
     "whatsappDisplay": "+27 64 499 7135",
@@ -159,8 +159,8 @@
     {
       "id": "pkg-bundle",
       "category": "package",
-      "name": "Launch Bundle",
-      "price": 1350,
+      "name": "Drop shipping Launch Bundle",
+      "price": 1499,
       "compareAt": 1900,
       "badge": "Best value",
       "featured": true,
