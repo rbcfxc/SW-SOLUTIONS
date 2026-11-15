@@ -334,6 +334,24 @@ async function createStitchPaymentRequest({ totalZAR, customer, externalReferenc
   return requestNode;
 }
 
+function mapExpressStatus(status) {
+  const map = {
+    paid: 'PaymentInitiationRequestCompleted',
+    completed: 'PaymentInitiationRequestCompleted',
+    complete: 'PaymentInitiationRequestCompleted',
+    success: 'PaymentInitiationRequestCompleted',
+    successful: 'PaymentInitiationRequestCompleted',
+    cancelled: 'PaymentInitiationRequestCancelled',
+    canceled: 'PaymentInitiationRequestCancelled',
+    expired: 'PaymentInitiationRequestExpired',
+    failed: 'PaymentInitiationRequestFailed',
+    declined: 'PaymentInitiationRequestFailed',
+    error: 'PaymentInitiationRequestFailed',
+  };
+  const key = String(status || '').toLowerCase();
+  return map[key] || (key ? 'Pending:' + key : 'Pending');
+}
+
 async function getStitchPaymentStatus(paymentId) {
   const auth = await getStitchClientToken();
   if (auth.mode === 'express') {
@@ -347,7 +365,7 @@ async function getStitchPaymentStatus(paymentId) {
       id: p.id || paymentId,
       externalReference: p.merchantReference,
       amount: p.amount,
-      state: { __typename: p.status === 'paid' || p.status === 'completed' ? 'PaymentInitiationRequestCompleted' : p.status },
+      state: { __typename: mapExpressStatus(p.status) },
     };
   }
 
@@ -629,53 +647,34 @@ const server = http.createServer(async (req, res) => {
 
   // --- API: Verify Stitch Payment Status ---
   if (pathname === '/api/stitch/status' && req.method === 'GET') {
-    const id = urlObj.searchParams.get('id') || '';
+    const qid = urlObj.searchParams.get('id') || '';
     const ref = urlObj.searchParams.get('ref') || '';
-    const cachedOrder = RECENT_ORDERS.get(id) || RECENT_ORDERS.get(ref) || null;
-
-    if (!id && !ref) {
+    const cachedOrder = RECENT_ORDERS.get(qid) || RECENT_ORDERS.get(ref) || null;
+    const id = qid || (cachedOrder && cachedOrder.id) || '';
+    if (!id) {
       return sendJson(res, 400, { ok: false, error: 'Missing payment id or ref parameter.' });
-    }
-    if (!id && cachedOrder) {
-      return sendJson(res, 200, {
-        ok: true,
-        id: cachedOrder.id,
-        externalReference: cachedOrder.externalReference,
-        amount: cachedOrder.totalZAR,
-        state: 'PaymentInitiationRequestCompleted',
-        order: cachedOrder,
-      });
     }
     if (!isStitchConfigured()) {
       return sendJson(res, 503, { ok: false, error: 'Stitch Money API is not configured.' });
     }
     try {
       const node = await getStitchPaymentStatus(id);
-      if (!node && !cachedOrder) {
+      if (!node) {
         return sendJson(res, 404, { ok: false, error: 'Payment request not found.' });
       }
       return sendJson(res, 200, {
         ok: true,
-        id: node?.id || cachedOrder?.id || id,
-        externalReference: node?.externalReference || cachedOrder?.externalReference || ref,
-        amount: node?.amount || cachedOrder?.totalZAR,
-        state: node?.state?.__typename || 'PaymentInitiationRequestCompleted',
-        details: node?.state || null,
+        id: node.id,
+        externalReference: node.externalReference || (cachedOrder && cachedOrder.externalReference) || ref,
+        amount: node.amount,
+        state: (node.state && node.state.__typename) || 'Unknown',
+        details: node.state,
         order: cachedOrder,
       });
     } catch (err) {
-      if (cachedOrder) {
-        return sendJson(res, 200, {
-          ok: true,
-          id: cachedOrder.id,
-          externalReference: cachedOrder.externalReference,
-          amount: cachedOrder.totalZAR,
-          state: 'PaymentInitiationRequestCompleted',
-          order: cachedOrder,
-        });
-      }
       console.error('[Stitch status error]:', err.message);
-      return sendJson(res, 500, { ok: false, error: err.message });
+      // Never claim success when verification fails
+      return sendJson(res, 200, { ok: true, id, state: 'Unknown', verifyError: true, order: cachedOrder });
     }
   }
 

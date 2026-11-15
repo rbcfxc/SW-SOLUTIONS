@@ -929,13 +929,17 @@ async function handleStitchReturn() {
     } catch (e) { /* fallback to savedOrder / query params */ }
   }
 
-  const isCancelled = (
-    statusParam === 'cancelled' ||
-    statusParam === 'closed' ||
-    statusParam === 'abandoned' ||
-    verifiedState === 'PaymentInitiationRequestCancelled' ||
-    verifiedState === 'PaymentInitiationRequestExpired'
+  const PAID_WORDS = ['complete', 'completed', 'paid', 'success', 'successful'];
+  const FAIL_WORDS = ['cancelled', 'canceled', 'closed', 'abandoned', 'expired', 'failed', 'declined', 'error', 'unsuccessful'];
+  const isPaid = verifiedState === 'PaymentInitiationRequestCompleted' || PAID_WORDS.includes(verifiedState.toLowerCase());
+  const isFailed = !isPaid && (
+    FAIL_WORDS.includes(statusParam) ||
+    FAIL_WORDS.includes(verifiedState.toLowerCase()) ||
+    /^PaymentInitiationRequest(Cancelled|Expired|Failed)$/.test(verifiedState)
   );
+  // Anything not confirmed paid or failed (pending/open/unknown) is "pending"
+  const isPending = !isPaid && !isFailed;
+  const isCancelled = isFailed;
 
   const rawRef = refParam || (savedOrder && savedOrder.externalReference) || stitchId || '';
   const displayRef = rawRef
@@ -1025,36 +1029,51 @@ async function handleStitchReturn() {
     retryBtn.addEventListener('click', () => openCart());
   }
 
-  // Update UI for Cancelled vs Successful state
-  if (isCancelled) {
-    const iconEl = $('#confirm-icon');
+  // Update UI: paid / failed / pending
+  const iconEl = $('#confirm-icon');
+  const titleEl = $('#confirm-title');
+  const subEl = $('#confirm-subtitle');
+  const statusPill = $('#confirm-status-pill');
+  const noteEl = $('#confirm-foot-note');
+  const nextEl = $('#confirm-next-section');
+
+  if (isFailed || isPending) {
     if (iconEl) {
       iconEl.classList.add('is-cancelled');
-      iconEl.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+      iconEl.innerHTML = isFailed
+        ? '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+        : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
     }
-    const titleEl = $('#confirm-title');
-    if (titleEl) titleEl.textContent = 'Payment not completed';
-    const subEl = $('#confirm-subtitle');
-    if (subEl) subEl.textContent = 'Your Stitch payment was cancelled or closed before completion. Your cart items are still saved so you can try again or order via WhatsApp.';
-    const statusPill = $('#confirm-status-pill');
     if (statusPill) {
       statusPill.classList.add('is-cancelled');
-      statusPill.textContent = 'Not Completed';
+      statusPill.textContent = isFailed ? 'Not Completed' : 'Pending';
     }
+    if (titleEl) titleEl.textContent = isFailed ? 'Payment not completed' : 'Payment not confirmed yet';
+    if (subEl) {
+      subEl.textContent = isFailed
+        ? 'Your payment was cancelled, declined or expired, so you have not been charged for this order. Your cart is still saved so you can try again or order via WhatsApp.'
+        : 'We could not confirm your payment yet. If you already paid, send us your reference on WhatsApp and we will check it. Otherwise your cart is saved and you can try again.';
+    }
+    if (noteEl) noteEl.hidden = true;
+    if (nextEl) nextEl.hidden = true;
     if (retryBtn) retryBtn.hidden = false;
-    if (waBtn) waBtn.textContent = 'Order on WhatsApp Instead';
-    showToast('Stitch payment was not completed. Your cart is still saved.', true);
-  } else {
-    // Payment succeeded — clear active cart
-    if (hasStitchReturn || savedOrder) {
-      sessionStorage.removeItem('metsing-pending-order');
-      cart = [];
-      saveCart();
-      renderCart();
-      if (hasStitchReturn) {
-        showToast(`✓ Payment confirmed (${displayRef})! Thank you for your order.`);
-      }
+    if (waBtn) {
+      waBtn.textContent = isFailed ? 'Order on WhatsApp Instead' : 'Ask About My Payment on WhatsApp';
+      if (isFailed) waBtn.href = whatsappLink(baseWaMsg);
+      else waBtn.href = whatsappLink('Hi Metsing.store! I may have paid online (Ref: ' + displayRef + ') but the site could not confirm it. Please check.');
     }
+    if (printBtn) printBtn.hidden = true;
+    showToast(isFailed ? 'Payment was not completed. Your cart is still saved.' : 'Payment not confirmed yet.', true);
+  } else {
+    // Payment confirmed — clear active cart
+    if (titleEl) titleEl.textContent = 'Payment successful!';
+    if (subEl) subEl.textContent = 'Thank you for your order. Your payment has been received and our team is ready to get started on your project.';
+    if (statusPill) statusPill.textContent = '✓ Paid';
+    sessionStorage.removeItem('metsing-pending-order');
+    cart = [];
+    saveCart();
+    renderCart();
+    showToast('✓ Payment confirmed (' + displayRef + ')! Thank you for your order.');
   }
 }
 
