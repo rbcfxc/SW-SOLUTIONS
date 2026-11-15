@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-15T06:55:58.831Z",
+  "updatedAt": "2026-11-15T06:56:45.425Z",
   "settings": {
     "whatsappNumber": "27644997135",
     "whatsappDisplay": "+27 64 499 7135",
@@ -26,7 +26,7 @@
         "label": "delivery"
       },
       {
-        "value": "R1,000",
+        "value": "R800",
         "label": "once-off"
       },
       {
