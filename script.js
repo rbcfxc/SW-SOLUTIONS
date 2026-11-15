@@ -1105,7 +1105,7 @@ function setTheme(theme) {
   }
   const metaTheme = $('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.setAttribute('content', theme === 'dark' ? '#07130E' : '#0B3D2E');
+    metaTheme.setAttribute('content', theme === 'dark' ? '#070709' : '#09090B');
   }
   try { localStorage.setItem(CONFIG.themeKey, theme); } catch (e) { /* storage unavailable */ }
 }

@@ -11,7 +11,7 @@ body.is-login-view::before {
   position: fixed;
   inset: -24px;
   z-index: -2;
-  background: #072A1F url("login-bg.jpg") center / cover no-repeat;
+  background: #09090B url("login-bg.jpg") center / cover no-repeat;
   filter: blur(10px) saturate(1.1);
   transform: scale(1.05);
 }
@@ -20,7 +20,7 @@ body.is-login-view::after {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(135deg, rgba(7, 42, 31, 0.58), rgba(11, 61, 46, 0.42));
+  background: linear-gradient(135deg, rgba(9, 9, 11, 0.72), rgba(185, 28, 28, 0.35));
 }
 
 .admin-badge {
@@ -29,7 +29,7 @@ body.is-login-view::after {
   text-transform: uppercase;
   letter-spacing: .06em;
   background: var(--accent);
-  color: var(--green-900);
+  color: #FFFFFF;
   padding: .2rem .55rem;
   border-radius: 999px;
   vertical-align: middle;
@@ -49,7 +49,7 @@ body.is-login-view::after {
 }
 
 .admin-alert {
-  background: rgba(200, 245, 90, .2);
+  background: rgba(220, 38, 38, .12);
   border: 1px solid var(--green-500);
   border-radius: var(--radius-sm);
   padding: .85rem 1rem;
@@ -137,7 +137,7 @@ body.is-login-view::after {
 }
 .admin-tab:hover { background: var(--surface-2); color: var(--text); }
 .admin-tab.active { background: var(--green-800); color: #fff; }
-[data-theme="dark"] .admin-tab.active { background: var(--accent); color: var(--green-900); }
+[data-theme="dark"] .admin-tab.active { background: var(--accent); color: #FFFFFF; }
 
 .admin-panel { display: none; }
 .admin-panel.active { display: block; }
@@ -159,7 +159,7 @@ body.is-login-view::after {
   border: 1px solid var(--border);
   background: var(--surface);
 }
-.pill.active { background: var(--accent); color: var(--green-900); border-color: var(--accent); }
+.pill.active { background: var(--accent); color: #FFFFFF; border-color: var(--accent); }
 .toolbar-right { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
 .admin-search {
   padding: .5rem .85rem;
