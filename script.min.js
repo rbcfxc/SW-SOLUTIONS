@@ -907,16 +907,16 @@ async function handleStitchReturn() {
 
   if (!confirmCard) return;
 
-  const stitchId = params.get('id') || '';
-  const statusParam = (params.get('status') || '').toLowerCase();
-  const refParam = params.get('ref') || '';
-  const amountParam = Number(params.get('amount')) || 0;
-
   let savedOrder = null;
   try {
     const raw = localStorage.getItem('metsing-last-order');
     if (raw) savedOrder = JSON.parse(raw);
   } catch (e) { /* ignore */ }
+
+  const stitchId = params.get('id') || params.get('paymentId') || (savedOrder && savedOrder.id) || '';
+  const statusParam = (params.get('status') || params.get('paymentStatus') || '').toLowerCase();
+  const refParam = params.get('ref') || (savedOrder && savedOrder.externalReference) || '';
+  const amountParam = Number(params.get('amount')) || 0;
 
   let verifiedState = statusParam;
   if (stitchId || refParam) {
