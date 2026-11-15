@@ -616,7 +616,8 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; letter-spacing:
 .footer-grid { display: grid; gap: 2rem; margin-bottom: 2.5rem; }
 .footer h2 { font-family: var(--font-body); font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .9rem; }
 .footer ul { display: grid; gap: .4rem; }
-.footer ul a { display: inline-flex; align-items: center; min-height: 36px; }
+.footer ul a { display: inline-flex; align-items: center; gap: .35rem; min-height: 36px; }
+.footer ul a.js-whatsapp, .js-phone-display { white-space: nowrap; }
 .footer a:hover { color: var(--green-500); }
 [data-theme="dark"] .footer a:hover { color: var(--accent); }
 .footer-tag { color: var(--muted); margin-top: .8rem; max-width: 320px; }
@@ -1024,7 +1025,7 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; letter-spacing:
 .terms-label a { text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
 @media (min-width: 768px) {
   .legal-doc { padding: 3rem 3rem; }
-  .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
+  .footer-grid { grid-template-columns: 1.5fr 1fr 1fr 1.25fr; }
 }
 
 
