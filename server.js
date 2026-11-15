@@ -487,8 +487,109 @@ const BLOCKED_FILES = new Set([
   '/SEO-SETUP.md',
 ]);
 
+/* ---------------------------------------------------------
+   5b. Live Site Content & Admin Auth Helpers
+   --------------------------------------------------------- */
+const DEFAULT_SITE_DATA_FILE = path.join(ROOT_DIR, 'data', 'site-content.json');
+const SITE_DATA_FILE = process.env.SITE_DATA_FILE || DEFAULT_SITE_DATA_FILE;
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'metsing2026').trim();
+const USING_DEFAULT_ADMIN_PASSWORD = !process.env.ADMIN_PASSWORD;
+const ADMIN_COOKIE_NAME = 'metsing_admin_session';
+
+function ensureSiteDataFile() {
+  try {
+    const dir = path.dirname(SITE_DATA_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(SITE_DATA_FILE) && fs.existsSync(DEFAULT_SITE_DATA_FILE)) {
+      fs.copyFileSync(DEFAULT_SITE_DATA_FILE, SITE_DATA_FILE);
+    }
+  } catch (err) {
+    console.error('[SiteData init error]:', err.message);
+  }
+}
+
+function loadSiteContent() {
+  ensureSiteDataFile();
+  try {
+    const raw = fs.readFileSync(SITE_DATA_FILE, 'utf8');
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error('[SiteData load error]:', err.message);
+    try {
+      return JSON.parse(fs.readFileSync(DEFAULT_SITE_DATA_FILE, 'utf8'));
+    } catch (e) {
+      return { products: [] };
+    }
+  }
+}
+
+function saveSiteContent(content) {
+  ensureSiteDataFile();
+  content.updatedAt = new Date().toISOString();
+  fs.writeFileSync(SITE_DATA_FILE, JSON.stringify(content, null, 2), 'utf8');
+  return content;
+}
+
+function getLiveCatalog() {
+  const map = { ...CATALOG };
+  const content = loadSiteContent();
+  if (content && Array.isArray(content.products)) {
+    for (const p of content.products) {
+      if (!p || !p.id || p.hidden) continue;
+      const price = Number(p.price);
+      if (!Number.isFinite(price) || price < 0) continue;
+      map[p.id] = { name: String(p.name || p.id), price };
+    }
+  }
+  return map;
+}
+
+function getAdminSessionSecret() {
+  return crypto
+    .createHash('sha256')
+    .update(`metsing-admin:${ADMIN_PASSWORD}:${process.env.STITCH_CLIENT_SECRET || 'local-salt'}`)
+    .digest('hex');
+}
+
+function signAdminToken(expiresAt) {
+  const payload = String(expiresAt);
+  const sig = crypto.createHmac('sha256', getAdminSessionSecret()).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function verifyAdminToken(token) {
+  if (!token || typeof token !== 'string') return false;
+  const parts = token.split('.');
+  if (parts.length !== 2) return false;
+  const [payload, sig] = parts;
+  const exp = Number(payload);
+  if (!Number.isFinite(exp) || Date.now() > exp) return false;
+  const expected = crypto.createHmac('sha256', getAdminSessionSecret()).update(payload).digest('base64url');
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function parseCookies(req) {
+  const out = {};
+  const raw = req.headers.cookie || '';
+  for (const pair of raw.split(';')) {
+    const idx = pair.indexOf('=');
+    if (idx === -1) continue;
+    const k = pair.slice(0, idx).trim();
+    const v = pair.slice(idx + 1).trim();
+    if (k) out[k] = decodeURIComponent(v);
+  }
+  return out;
+}
+
+function isAdminAuthenticated(req) {
+  const cookies = parseCookies(req);
+  return verifyAdminToken(cookies[ADMIN_COOKIE_NAME]);
+}
+
 function serveStaticFile(req, res, pathname) {
-  if (BLOCKED_FILES.has(pathname) || pathname.startsWith('/.')) {
+  if (BLOCKED_FILES.has(pathname) || pathname.startsWith('/.') || pathname.startsWith('/data/')) {
     return serve404(res);
   }
 
@@ -568,11 +669,12 @@ const server = http.createServer(async (req, res) => {
       const items = Array.isArray(body.items) ? body.items : [];
       const customer = body.customer || {};
 
-      // Validate cart items against server-side CATALOG
+      // Validate cart items against live catalog (site-content.json + fallback CATALOG)
+      const liveCatalog = getLiveCatalog();
       let totalZAR = 0;
       const verifiedItems = [];
       for (const item of items) {
-        const entry = CATALOG[item.id];
+        const entry = liveCatalog[item.id];
         const qty = Number(item.qty);
         if (!entry || !Number.isInteger(qty) || qty <= 0 || qty > 50) continue;
         totalZAR += entry.price * qty;
@@ -686,6 +788,109 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { received: true });
     } catch (err) {
       return sendJson(res, 400, { error: 'Invalid webhook payload' });
+    }
+  }
+
+  // --- API: Public Live Site Content ---
+  if (pathname === '/api/site-content' && req.method === 'GET') {
+    const content = loadSiteContent();
+    return sendJson(res, 200, content);
+  }
+
+  // --- API: Admin Session Check ---
+  if (pathname === '/api/admin/session' && req.method === 'GET') {
+    return sendJson(res, 200, {
+      ok: true,
+      authenticated: isAdminAuthenticated(req),
+      usingDefaultPassword: USING_DEFAULT_ADMIN_PASSWORD,
+    });
+  }
+
+  // --- API: Admin Login ---
+  if (pathname === '/api/admin/login' && req.method === 'POST') {
+    try {
+      const body = await readJsonBody(req);
+      const pw = String(body.password || '');
+      const a = Buffer.from(pw);
+      const b = Buffer.from(ADMIN_PASSWORD);
+      if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+        return sendJson(res, 401, { ok: false, error: 'Incorrect admin password.' });
+      }
+      const maxAgeSec = 7 * 24 * 60 * 60;
+      const token = signAdminToken(Date.now() + maxAgeSec * 1000);
+      const secureFlag = proto === 'https' ? '; Secure' : '';
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'Set-Cookie': `${ADMIN_COOKIE_NAME}=${encodeURIComponent(token)}; HttpOnly; Path=/; Max-Age=${maxAgeSec}; SameSite=Lax${secureFlag}`,
+      });
+      return res.end(JSON.stringify({ ok: true, usingDefaultPassword: USING_DEFAULT_ADMIN_PASSWORD }));
+    } catch (err) {
+      return sendJson(res, 400, { ok: false, error: 'Invalid request.' });
+    }
+  }
+
+  // --- API: Admin Logout ---
+  if (pathname === '/api/admin/logout' && req.method === 'POST') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'Set-Cookie': `${ADMIN_COOKIE_NAME}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax`,
+    });
+    return res.end(JSON.stringify({ ok: true }));
+  }
+
+  // --- API: Admin Get Full Content & Recent Orders ---
+  if (pathname === '/api/admin/content' && req.method === 'GET') {
+    if (!isAdminAuthenticated(req)) {
+      return sendJson(res, 401, { ok: false, error: 'Unauthorized. Please sign in.' });
+    }
+    const seen = new Set();
+    const recentOrders = [];
+    for (const order of RECENT_ORDERS.values()) {
+      const key = order.externalReference || order.id;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      recentOrders.unshift(order);
+    }
+    return sendJson(res, 200, {
+      ok: true,
+      content: loadSiteContent(),
+      recentOrders: recentOrders.slice(0, 50),
+      stitchConfigured: isStitchConfigured(),
+      usingDefaultPassword: USING_DEFAULT_ADMIN_PASSWORD,
+      dataFile: SITE_DATA_FILE,
+    });
+  }
+
+  // --- API: Admin Save Live Content ---
+  if (pathname === '/api/admin/content' && req.method === 'PUT') {
+    if (!isAdminAuthenticated(req)) {
+      return sendJson(res, 401, { ok: false, error: 'Unauthorized. Please sign in.' });
+    }
+    try {
+      const body = await readJsonBody(req, 512 * 1024);
+      if (!body || typeof body !== 'object' || !Array.isArray(body.products)) {
+        return sendJson(res, 400, { ok: false, error: 'Invalid site content payload (missing products array).' });
+      }
+      const saved = saveSiteContent(body);
+      return sendJson(res, 200, { ok: true, content: saved });
+    } catch (err) {
+      return sendJson(res, 400, { ok: false, error: err.message || 'Could not save site content.' });
+    }
+  }
+
+  // --- API: Admin Reset to Bundled Defaults ---
+  if (pathname === '/api/admin/reset' && req.method === 'POST') {
+    if (!isAdminAuthenticated(req)) {
+      return sendJson(res, 401, { ok: false, error: 'Unauthorized. Please sign in.' });
+    }
+    try {
+      const defaults = JSON.parse(fs.readFileSync(DEFAULT_SITE_DATA_FILE, 'utf8'));
+      const saved = saveSiteContent(defaults);
+      return sendJson(res, 200, { ok: true, content: saved });
+    } catch (err) {
+      return sendJson(res, 500, { ok: false, error: err.message });
     }
   }
 

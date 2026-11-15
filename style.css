@@ -1048,4 +1048,22 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; letter-spacing:
   .cookie-actions { flex-wrap: nowrap; }
   .cookie-actions .btn { flex: none; }
 }
-@media print { .cookie-banner { display: none !important; } }
+@media print { .cookie-banner, .announcement-bar { display: none !important; } }
+
+/* ---------- 25. Announcement bar (controlled from /admin/) ---------- */
+.announcement-bar {
+  background: var(--green-900);
+  color: #fff;
+  text-align: center;
+  padding: .55rem 1rem;
+  font-size: .88rem;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+.announcement-bar a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-left: .4rem;
+}

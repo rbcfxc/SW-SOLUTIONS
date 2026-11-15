@@ -82,7 +82,7 @@ const GOV_FEES_NOTE = 'Government/statutory fees are separate from our service f
    category: 'package' | 'niche' | 'addon' | 'service'
    unit (optional): shown after the price, e.g. '/month'
    --------------------------------------------------------- */
-const PRODUCTS = [
+let PRODUCTS = [
   /* ----- Packages ----- */
   {
     id: 'pkg-store',
@@ -353,7 +353,7 @@ function whatsappLink(message) {
 function renderPackages() {
   const grid = $('#packages-grid');
   if (!grid) return;
-  grid.innerHTML = PRODUCTS.filter((p) => p.category === 'package').map((p, i) => `
+  grid.innerHTML = PRODUCTS.filter((p) => p.category === 'package' && !p.hidden).map((p, i) => `
     <article class="package ${p.featured ? 'featured' : ''} reveal" style="--d:${i * 100}ms" aria-labelledby="${p.id}-title">
       ${p.badge ? `<span class="package-badge">${esc(p.badge)}</span>` : ''}
       <div class="package-icon" aria-hidden="true">${p.icon}</div>
@@ -376,7 +376,7 @@ function renderPackages() {
 function renderNiches() {
   const grid = $('#niches-grid');
   if (!grid) return;
-  grid.innerHTML = PRODUCTS.filter((p) => p.category === 'niche').map((p, i) => `
+  grid.innerHTML = PRODUCTS.filter((p) => p.category === 'niche' && !p.hidden).map((p, i) => `
     <button type="button" class="niche reveal" style="--d:${(i % 4) * 80}ms; --niche-bg:${p.bg}; --niche-ink:${p.ink}"
             data-add="${p.id}" aria-label="Add ${esc(p.name)} to cart, ${formatZAR(p.price)}">
       <div class="niche-mock" aria-hidden="true">
@@ -395,7 +395,7 @@ function renderNiches() {
 function renderAddons() {
   const grid = $('#addons-grid');
   if (!grid) return;
-  grid.innerHTML = PRODUCTS.filter((p) => p.category === 'addon').map((p, i) => `
+  grid.innerHTML = PRODUCTS.filter((p) => p.category === 'addon' && !p.hidden).map((p, i) => `
     <article class="addon reveal" style="--d:${(i % 3) * 80}ms">
       <div class="addon-top">
         <span class="addon-icon" aria-hidden="true">${p.icon}</span>
@@ -415,10 +415,10 @@ function renderServices() {
   const grid = $('#services-grid');
   if (!grid) return;
 
-  const coreServices = PRODUCTS.filter((p) => p.category === 'service' && p.group === 'core');
-  const keyServices = PRODUCTS.filter((p) => p.category === 'service' && p.group === 'key');
-  const cipcServices = PRODUCTS.filter((p) => p.category === 'service' && p.group === 'cipc');
-  const supportServices = PRODUCTS.filter((p) => p.category === 'service' && p.group === 'support');
+  const coreServices = PRODUCTS.filter((p) => p.category === 'service' && p.group === 'core' && !p.hidden);
+  const keyServices = PRODUCTS.filter((p) => p.category === 'service' && p.group === 'key' && !p.hidden);
+  const cipcServices = PRODUCTS.filter((p) => p.category === 'service' && p.group === 'cipc' && !p.hidden);
+  const supportServices = PRODUCTS.filter((p) => p.category === 'service' && p.group === 'support' && !p.hidden);
 
   const renderRelated = (relatedIds = []) => {
     if (!relatedIds.length) return '';
@@ -1236,9 +1236,168 @@ function initCookieBanner() {
 }
 
 /* ---------------------------------------------------------
+   12b. Live Site Content Loader (from /api/site-content)
+   --------------------------------------------------------- */
+function applySiteContent(data) {
+  if (!data || typeof data !== 'object') return;
+
+  if (data.settings) {
+    if (data.settings.whatsappNumber) CONFIG.whatsappNumber = String(data.settings.whatsappNumber).replace(/\D/g, '');
+    if (data.settings.whatsappDisplay) CONFIG.whatsappDisplay = String(data.settings.whatsappDisplay);
+    if (data.settings.currency) CONFIG.currency = String(data.settings.currency);
+    if (data.settings.email) {
+      $$('a[href^="mailto:"]').forEach((a) => {
+        a.href = `mailto:${data.settings.email}`;
+        if (a.textContent.includes('@')) a.textContent = data.settings.email;
+      });
+    }
+    if (data.settings.footerTag) {
+      const ft = $('.footer-tag');
+      if (ft) ft.textContent = data.settings.footerTag;
+    }
+    const ann = data.settings.announcement;
+    if (ann && ann.enabled && ann.text) {
+      let bar = $('#announcement-bar');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'announcement-bar';
+        bar.className = 'announcement-bar';
+        const nav = $('#navbar');
+        if (nav && nav.parentNode) nav.parentNode.insertBefore(bar, nav);
+      }
+      const linkHtml = ann.linkText && ann.linkUrl
+        ? ` <a href="${esc(ann.linkUrl)}">${esc(ann.linkText)}</a>`
+        : '';
+      bar.innerHTML = `<span>${esc(ann.text)}</span>${linkHtml}`;
+    }
+  }
+
+  if (Array.isArray(data.products) && data.products.length) {
+    PRODUCTS = data.products;
+    cart = loadCart();
+  }
+
+  // Homepage-only sections
+  if (data.hero && $('#top')) {
+    const h = data.hero;
+    const eye = $('#top .eyebrow');
+    if (eye && h.eyebrow) eye.textContent = h.eyebrow;
+    const h1 = $('#top h1');
+    if (h1 && (h.titlePrefix || h.titleHighlight)) {
+      h1.innerHTML = `${esc(h.titlePrefix || '')} <span class="highlight">${esc(h.titleHighlight || '')}</span>`;
+    }
+    const sub = $('#top .hero-sub');
+    if (sub && h.subtext) sub.textContent = h.subtext;
+    const cta = $('#top .hero-ctas .btn-accent');
+    if (cta && h.primaryCta) cta.textContent = h.primaryCta;
+    const proof = $('#top .hero-proof');
+    if (proof && Array.isArray(h.stats) && h.stats.length) {
+      proof.innerHTML = h.stats.map((s) => `<li><strong>${esc(s.value)}</strong><span>${esc(s.label)}</span></li>`).join('');
+    }
+  }
+
+  if (Array.isArray(data.trust) && data.trust.length) {
+    const tl = $('.trust-list');
+    if (tl) {
+      tl.innerHTML = data.trust.map((t) => `<li class="reveal visible"><span class="trust-ico">${esc(t.icon || '✓')}</span>${esc(t.text || '')}</li>`).join('');
+    }
+  }
+
+  if (data.packagesSection && $('#packages')) {
+    const ps = data.packagesSection;
+    const eye = $('#packages .eyebrow');
+    if (eye && ps.eyebrow) eye.textContent = ps.eyebrow;
+    const t = $('#packages-title');
+    if (t && ps.title) t.textContent = ps.title;
+    const p = $('#packages .section-head p:not(.eyebrow)');
+    if (p && ps.subtitle) p.textContent = ps.subtitle;
+  }
+
+  if (data.howItWorks && $('#how')) {
+    const hw = data.howItWorks;
+    const eye = $('#how .eyebrow');
+    if (eye && hw.eyebrow) eye.textContent = hw.eyebrow;
+    const t = $('#how-title');
+    if (t && hw.title) t.textContent = hw.title;
+    const stepsEl = $('#how .steps');
+    if (stepsEl && Array.isArray(hw.steps) && hw.steps.length) {
+      stepsEl.innerHTML = hw.steps.map((s, i) => `
+        <li class="step reveal visible">
+          <span class="step-num">${i + 1}</span>
+          <h3>${esc(s.title)}</h3>
+          <p>${esc(s.text)}</p>
+        </li>`).join('');
+    }
+  }
+
+  if (data.testimonials && $('#testimonials')) {
+    const tm = data.testimonials;
+    const eye = $('#testimonials .eyebrow');
+    if (eye && tm.eyebrow) eye.textContent = tm.eyebrow;
+    const t = $('#testimonials-title');
+    if (t && tm.title) t.textContent = tm.title;
+    const grid = $('#testimonials .testimonials-grid');
+    if (grid && Array.isArray(tm.items) && tm.items.length) {
+      grid.innerHTML = tm.items.map((item) => {
+        const starsCount = Math.max(1, Math.min(5, Number(item.stars) || 5));
+        const stars = '★'.repeat(starsCount);
+        const avatar = item.avatar || (item.name || 'MS').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+        return `
+        <figure class="testimonial reveal visible">
+          <div class="stars" aria-label="${starsCount} out of 5 stars">${stars}</div>
+          <blockquote>“${esc(item.quote)}”</blockquote>
+          <figcaption><span class="avatar" aria-hidden="true">${esc(avatar)}</span><div><b>${esc(item.name)}</b><small>${esc(item.role)}</small></div></figcaption>
+        </figure>`;
+      }).join('');
+    }
+  }
+
+  if (data.faqs && $('#faq-list')) {
+    const fq = data.faqs;
+    const eye = $('#faq .eyebrow');
+    if (eye && fq.eyebrow) eye.textContent = fq.eyebrow;
+    const t = $('#faq-title');
+    if (t && fq.title) t.textContent = fq.title;
+    const list = $('#faq-list');
+    if (list && Array.isArray(fq.items) && fq.items.length) {
+      list.innerHTML = fq.items.map((item, i) => `
+        <div class="faq-item reveal visible">
+          <h3><button class="faq-q" aria-expanded="false" aria-controls="faq-${i + 1}" id="faq-${i + 1}-btn">${esc(item.q)}<span class="faq-icon" aria-hidden="true"></span></button></h3>
+          <div class="faq-a" id="faq-${i + 1}" role="region" aria-labelledby="faq-${i + 1}-btn"><p>${esc(item.a)}</p></div>
+        </div>`).join('');
+    }
+  }
+
+  if (data.finalCta && $('.final-cta')) {
+    const fc = data.finalCta;
+    const h2 = $('.final-cta h2');
+    if (h2 && fc.title) h2.textContent = fc.title;
+    const p = $('.final-cta p');
+    if (p && fc.subtitle) p.textContent = fc.subtitle;
+    const btn = $('.final-cta .btn-accent');
+    if (btn && fc.primaryBtn) btn.textContent = fc.primaryBtn;
+  }
+}
+
+async function loadLiveSiteContent() {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch('/api/site-content', { cache: 'no-store', signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) return;
+    const data = await res.json();
+    applySiteContent(data);
+  } catch (e) {
+    /* Fallback silently to bundled defaults */
+  }
+}
+
+/* ---------------------------------------------------------
    13. Init & event wiring
    --------------------------------------------------------- */
-function init() {
+async function init() {
+  await loadLiveSiteContent();
   renderPackages();
   renderNiches();
   renderAddons();

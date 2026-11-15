@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | Metsing.store</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="theme-color" content="#0B3D2E" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.min.css" />
+  <link rel="stylesheet" href="admin.css" />
+  <script>
+    try {
+      var t = localStorage.getItem('metsing-theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <header class="navbar">
+    <nav class="container nav-inner" aria-label="Admin navigation">
+      <a href="../" class="logo" aria-label="Metsing.store home">
+        <img src="../favicon.svg" alt="" width="36" height="36" class="logo-mark-img" />
+        <span class="logo-text">Metsing<span>.store</span> <small class="admin-badge">Admin</small></span>
+      </a>
+      <div class="nav-actions">
+        <button class="icon-btn" id="admin-theme-toggle" aria-label="Switch theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v2.5M12 20v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M1.5 12H4M20 12h2.5M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>
+        </button>
+        <a href="../" target="_blank" rel="noopener" class="btn btn-outline btn-sm">View Live Site ↗</a>
+        <button type="button" class="btn btn-ghost btn-sm" id="admin-logout-btn" hidden>Sign Out</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="admin-main container">
+    <!-- ================= LOGIN SCREEN ================= -->
+    <section id="admin-login-view" class="admin-login-card" hidden>
+      <p class="eyebrow">Owner Access</p>
+      <h1>Sign in to Metsing.store Admin</h1>
+      <p class="admin-muted">Update products, prices, homepage text, testimonials, FAQs, and contact details on the live website.</p>
+      <div id="default-pw-alert" class="admin-alert" hidden>
+        <strong>Security tip:</strong> You are currently using the default starter password (<code>metsing2026</code>). Set <code>ADMIN_PASSWORD</code> in Render &rarr; Environment Variables to lock this down.
+      </div>
+      <form id="admin-login-form" class="admin-form">
+        <div class="field">
+          <label for="admin-password">Admin Password</label>
+          <input id="admin-password" type="password" autocomplete="current-password" placeholder="Enter admin password" required />
+        </div>
+        <p class="form-error" id="login-error" role="alert"></p>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-submit-btn">Sign In</button>
+      </form>
+    </section>
+
+    <!-- ================= DASHBOARD ================= -->
+    <section id="admin-dashboard-view" hidden>
+      <div id="dash-default-pw-banner" class="admin-alert" hidden>
+        <strong>Reminder:</strong> <code>ADMIN_PASSWORD</code> is not set in Render yet (using default <code>metsing2026</code>). Add <code>ADMIN_PASSWORD</code> in Render &rarr; Environment Variables.
+      </div>
+
+      <div class="admin-topbar">
+        <div>
+          <h1>Live Website Editor</h1>
+          <p class="admin-muted" id="last-saved-info">Loaded live content</p>
+        </div>
+        <div class="admin-topbar-actions">
+          <span class="unsaved-pill" id="unsaved-pill" hidden>Unsaved changes</span>
+          <button type="button" class="btn btn-accent" id="save-all-btn">Save &amp; Publish Live</button>
+        </div>
+      </div>
+
+      <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+        <button type="button" class="admin-tab active" data-tab="products" role="tab" aria-selected="true">Products &amp; Prices</button>
+        <button type="button" class="admin-tab" data-tab="homepage" role="tab" aria-selected="false">Homepage &amp; Banner</button>
+        <button type="button" class="admin-tab" data-tab="social" role="tab" aria-selected="false">Testimonials &amp; FAQ</button>
+        <button type="button" class="admin-tab" data-tab="settings" role="tab" aria-selected="false">Contact &amp; Settings</button>
+        <button type="button" class="admin-tab" data-tab="orders" role="tab" aria-selected="false">Recent Orders</button>
+        <button type="button" class="admin-tab" data-tab="backup" role="tab" aria-selected="false">Backup &amp; Hosting</button>
+      </div>
+
+      <!-- TAB 1: PRODUCTS -->
+      <div class="admin-panel active" id="tab-products">
+        <div class="panel-toolbar">
+          <div class="filter-pills" id="cat-filters">
+            <button type="button" class="pill active" data-cat="all">All</button>
+            <button type="button" class="pill" data-cat="package">Packages</button>
+            <button type="button" class="pill" data-cat="niche">Store Niches</button>
+            <button type="button" class="pill" data-cat="addon">Add-ons</button>
+            <button type="button" class="pill" data-cat="service">Company Consultation</button>
+          </div>
+          <div class="toolbar-right">
+            <input type="search" id="product-search" class="admin-search" placeholder="Search products..." />
+            <button type="button" class="btn btn-primary btn-sm" id="add-product-btn">+ Add New Item</button>
+          </div>
+        </div>
+        <div id="products-list" class="admin-cards-grid"></div>
+      </div>
+
+      <!-- TAB 2: HOMEPAGE & BANNER -->
+      <div class="admin-panel" id="tab-homepage">
+        <div class="admin-section-grid">
+          <div class="admin-box">
+            <h2>Top Announcement Banner</h2>
+            <label class="toggle-row">
+              <input type="checkbox" id="ann-enabled" />
+              <span>Show announcement bar at top of every page</span>
+            </label>
+            <div class="field"><label for="ann-text">Banner Text</label><input id="ann-text" type="text" placeholder="e.g. Launch Special: Free logo with every store this week!" /></div>
+            <div class="field-row">
+              <div class="field"><label for="ann-link-text">Link Text (optional)</label><input id="ann-link-text" type="text" placeholder="e.g. View Packages" /></div>
+              <div class="field"><label for="ann-link-url">Link URL (optional)</label><input id="ann-link-url" type="text" placeholder="e.g. /#packages" /></div>
+            </div>
+          </div>
+
+          <div class="admin-box">
+            <h2>Hero Section</h2>
+            <div class="field"><label for="hero-eyebrow">Eyebrow Tag</label><input id="hero-eyebrow" type="text" /></div>
+            <div class="field"><label for="hero-title-prefix">Headline (Part 1)</label><input id="hero-title-prefix" type="text" /></div>
+            <div class="field"><label for="hero-title-highlight">Highlighted Headline (Part 2)</label><input id="hero-title-highlight" type="text" /></div>
+            <div class="field"><label for="hero-subtext">Subheadline</label><textarea id="hero-subtext" rows="3"></textarea></div>
+            <div class="field"><label for="hero-cta">Primary Button Text</label><input id="hero-cta" type="text" /></div>
+            <div class="field-row-3" id="hero-stats-inputs"></div>
+          </div>
+
+          <div class="admin-box">
+            <h2>Trust Bar (4 Highlights)</h2>
+            <div id="trust-inputs" class="admin-stack"></div>
+          </div>
+
+          <div class="admin-box">
+            <h2>Packages Header &amp; Final CTA</h2>
+            <div class="field"><label for="pkg-eyebrow">Packages Eyebrow</label><input id="pkg-eyebrow" type="text" /></div>
+            <div class="field"><label for="pkg-title">Packages Title</label><input id="pkg-title" type="text" /></div>
+            <div class="field"><label for="pkg-subtitle">Packages Subtitle</label><input id="pkg-subtitle" type="text" /></div>
+            <hr class="admin-hr" />
+            <div class="field"><label for="cta-title">Final CTA Headline</label><input id="cta-title" type="text" /></div>
+            <div class="field"><label for="cta-subtitle">Final CTA Subtitle</label><input id="cta-subtitle" type="text" /></div>
+            <div class="field"><label for="cta-btn">Final CTA Button Text</label><input id="cta-btn" type="text" /></div>
+          </div>
+
+          <div class="admin-box">
+            <h2>How It Works (3 Steps)</h2>
+            <div class="field"><label for="how-eyebrow">Eyebrow</label><input id="how-eyebrow" type="text" /></div>
+            <div class="field"><label for="how-title">Section Title</label><input id="how-title" type="text" /></div>
+            <div id="how-steps-inputs" class="admin-stack"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: TESTIMONIALS & FAQ -->
+      <div class="admin-panel" id="tab-social">
+        <div class="admin-section-grid">
+          <div class="admin-box">
+            <div class="box-head">
+              <h2>Testimonials</h2>
+              <button type="button" class="btn btn-outline btn-sm" id="add-testimonial-btn">+ Add Testimonial</button>
+            </div>
+            <div class="field-row">
+              <div class="field"><label for="tm-eyebrow">Eyebrow</label><input id="tm-eyebrow" type="text" /></div>
+              <div class="field"><label for="tm-title">Section Title</label><input id="tm-title" type="text" /></div>
+            </div>
+            <div id="testimonials-editor" class="admin-stack"></div>
+          </div>
+
+          <div class="admin-box">
+            <div class="box-head">
+              <h2>Frequently Asked Questions</h2>
+              <button type="button" class="btn btn-outline btn-sm" id="add-faq-btn">+ Add FAQ</button>
+            </div>
+            <div class="field-row">
+              <div class="field"><label for="faq-eyebrow">Eyebrow</label><input id="faq-eyebrow" type="text" /></div>
+              <div class="field"><label for="faq-title">Section Title</label><input id="faq-title" type="text" /></div>
+            </div>
+            <div id="faqs-editor" class="admin-stack"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: CONTACT & SETTINGS -->
+      <div class="admin-panel" id="tab-settings">
+        <div class="admin-box admin-box-narrow">
+          <h2>Contact &amp; Global Settings</h2>
+          <div class="field"><label for="set-wa-num">WhatsApp Number (digits only, e.g. 27644997135)</label><input id="set-wa-num" type="text" /></div>
+          <div class="field"><label for="set-wa-display">Display Phone Number</label><input id="set-wa-display" type="text" /></div>
+          <div class="field"><label for="set-email">Contact Email</label><input id="set-email" type="email" /></div>
+          <div class="field"><label for="set-currency">Currency Symbol</label><input id="set-currency" type="text" /></div>
+          <div class="field"><label for="set-footer-tag">Footer Tagline</label><textarea id="set-footer-tag" rows="2"></textarea></div>
+        </div>
+      </div>
+
+      <!-- TAB 5: RECENT ORDERS -->
+      <div class="admin-panel" id="tab-orders">
+        <div class="admin-box">
+          <div class="box-head">
+            <h2>Recent Online Orders (Current Server Session)</h2>
+            <button type="button" class="btn btn-outline btn-sm" id="refresh-orders-btn">Refresh</button>
+          </div>
+          <div id="orders-list" class="admin-stack"></div>
+        </div>
+      </div>
+
+      <!-- TAB 6: BACKUP & HOSTING -->
+      <div class="admin-panel" id="tab-backup">
+        <div class="admin-box admin-box-narrow">
+          <h2>Backup, Restore &amp; Render Persistence</h2>
+          <p class="admin-muted">
+            Changes you save here update the live site immediately, including Stitch online checkout prices.
+            On Render's free tier, local disk files reset when the server restarts or redeploys &mdash; download a JSON backup anytime, or attach a Render Persistent Disk and set <code>SITE_DATA_FILE</code> in Render Environment Variables.
+          </p>
+          <p class="admin-muted" id="data-file-path"></p>
+          <div class="backup-actions">
+            <button type="button" class="btn btn-primary" id="export-json-btn">Download Backup (JSON)</button>
+            <label class="btn btn-outline" for="import-json-input">Import JSON Backup</label>
+            <input type="file" id="import-json-input" accept="application/json,.json" hidden />
+            <button type="button" class="btn btn-ghost" id="reset-defaults-btn">Reset to Original Defaults</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="admin.js" defer></script>
+</body>
+</html>

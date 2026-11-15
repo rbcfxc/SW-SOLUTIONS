@@ -1,0 +1,644 @@
+{
+  "version": 1,
+  "updatedAt": "2026-11-15T03:27:06.828Z",
+  "settings": {
+    "whatsappNumber": "27644997135",
+    "whatsappDisplay": "+27 64 499 7135",
+    "email": "info@metsing.store",
+    "currency": "R",
+    "footerTag": "Ready-made online stores, business websites and Company Consultation for South African entrepreneurs.",
+    "announcement": {
+      "enabled": false,
+      "text": "",
+      "linkText": "",
+      "linkUrl": ""
+    }
+  },
+  "hero": {
+    "eyebrow": "🇿🇦 Built for South African beginners",
+    "titlePrefix": "Get your own online store,",
+    "titleHighlight": "ready to sell in 48 hours.",
+    "subtext": "We sell ready-made dropshipping stores and professional business websites. Pick a package, we build it, load it and hand it over within 48 hours. No coding, no tech stress, just a once-off payment from R1,000. Need to make it official? We also offer Company Consultation: company (CIPC), CSD, CIDB and COIDA.",
+    "primaryCta": "Browse Packages",
+    "stats": [
+      {
+        "value": "48h",
+        "label": "delivery"
+      },
+      {
+        "value": "R1,000",
+        "label": "once-off"
+      },
+      {
+        "value": "8",
+        "label": "store niches"
+      }
+    ]
+  },
+  "trust": [
+    {
+      "icon": "⚡",
+      "text": "Delivered in 48 hours"
+    },
+    {
+      "icon": "📱",
+      "text": "Mobile-ready"
+    },
+    {
+      "icon": "🇿🇦",
+      "text": "Local SA support"
+    },
+    {
+      "icon": "💳",
+      "text": "One-time payment"
+    }
+  ],
+  "packagesSection": {
+    "eyebrow": "Packages",
+    "title": "Choose what you want us to build",
+    "subtitle": "Every package is a once-off payment. You own it, you keep the profits."
+  },
+  "howItWorks": {
+    "eyebrow": "How it works",
+    "title": "From idea to online store in 3 simple steps",
+    "steps": [
+      {
+        "title": "Choose",
+        "text": "Pick a package, a store niche and any store add-ons you like. Add them to your cart."
+      },
+      {
+        "title": "Order on WhatsApp",
+        "text": "Send your order with one tap. We confirm the details and payment with you directly."
+      },
+      {
+        "title": "We build & hand over",
+        "text": "Within 48 hours you get your finished store plus a simple guide so you can start selling."
+      }
+    ]
+  },
+  "testimonials": {
+    "eyebrow": "Testimonials",
+    "title": "Entrepreneurs who started with us",
+    "items": [
+      {
+        "stars": 5,
+        "quote": "I had zero tech skills. Two days later I had a beautiful food store and made my first sale that same week!",
+        "name": "Thandi M.",
+        "role": "Food & Restaurant · Johannesburg",
+        "avatar": "TM"
+      },
+      {
+        "stars": 5,
+        "quote": "The website for my salon looks so professional. Clients now book straight from the WhatsApp button.",
+        "name": "Lerato N.",
+        "role": "Business Website · Pretoria",
+        "avatar": "LN"
+      },
+      {
+        "stars": 5,
+        "quote": "The Launch Bundle was worth every rand. Logo, store and Yoco payments all set up. Super friendly support too.",
+        "name": "Sipho K.",
+        "role": "Tech Gadgets store · Cape Town",
+        "avatar": "SK"
+      }
+    ]
+  },
+  "faqs": {
+    "eyebrow": "FAQ",
+    "title": "Questions? We've got answers.",
+    "items": [
+      {
+        "q": "What is dropshipping?",
+        "a": "Dropshipping is a way to run an online store without keeping stock. When a customer buys from your store, your supplier ships the product directly to them. You only pay for the product after you've made the sale, and you keep the difference as profit."
+      },
+      {
+        "q": "What exactly is included?",
+        "a": "The Dropshipping Store includes a professional mobile-friendly design, homepage, product pages, cart and checkout, About/Contact/Shipping/Refund pages, 10 starter products and a handover guide. The Business Website includes up to 5 pages, a contact form, WhatsApp button, mobile-friendly design and basic SEO. The Launch Bundle adds a logo and payment gateway setup to the Dropshipping Store."
+      },
+      {
+        "q": "How long does delivery take?",
+        "a": "Most stores and websites are delivered within 48 hours after your order and payment are confirmed. Larger add-ons, like Product Copy & Creatives for many products, may take a little longer. We'll always give you a clear timeline upfront. Company Consultation services follow each authority's own processing times, so those are typical estimates rather than a 48-hour promise."
+      },
+      {
+        "q": "How can I pay?",
+        "a": "You can pay via EFT / instant bank transfer, or securely online by card. Once you send your order on WhatsApp, we'll share the payment details with you. It's a once-off payment with no monthly fees (unless you choose the optional Store Maintenance add-on)."
+      },
+      {
+        "q": "What is your refund policy?",
+        "a": "If we haven't started building yet, you can cancel for a full refund. Once work has begun, we'll keep making revisions until you're happy with the result. Your satisfaction is our priority."
+      },
+      {
+        "q": "Do you offer support after handover?",
+        "a": "Yes! Every order includes friendly local support on WhatsApp after handover to help you get started. For ongoing updates and care, you can add Store Maintenance for R300/month."
+      }
+    ]
+  },
+  "finalCta": {
+    "title": "Your business deserves to be online. Let's launch it this week.",
+    "subtitle": "Join South African entrepreneurs who skipped the tech headaches and started selling.",
+    "primaryBtn": "Get My Store"
+  },
+  "products": [
+    {
+      "id": "pkg-store",
+      "category": "package",
+      "name": "Dropshipping Store",
+      "price": 1000,
+      "icon": "🛍️",
+      "description": "A complete, ready-to-launch online store, built and handed over for you.",
+      "features": [
+        "Professional, mobile-friendly design",
+        "Homepage & product pages",
+        "Cart and checkout",
+        "About, Contact, Shipping & Refund pages",
+        "10 starter products loaded",
+        "Quick handover guide to start selling immediately"
+      ]
+    },
+    {
+      "id": "pkg-bundle",
+      "category": "package",
+      "name": "Launch Bundle",
+      "price": 1500,
+      "compareAt": 1900,
+      "badge": "Best value",
+      "featured": true,
+      "icon": "🚀",
+      "description": "Everything you need to launch with confidence: store, brand and payments.",
+      "features": [
+        "Everything in the Dropshipping Store",
+        "Custom logo for your brand",
+        "Payment gateway setup (PayFast, Yoco or Ozow)",
+        "10 starter products loaded",
+        "Quick handover guide",
+        "Save R400 vs buying separately"
+      ]
+    },
+    {
+      "id": "pkg-website",
+      "category": "package",
+      "name": "Business Website",
+      "price": 2000,
+      "icon": "💼",
+      "description": "A custom website for any business: salons, plumbers, caterers, consultants and more.",
+      "features": [
+        "Up to 5 pages: Home, About, Services, Gallery, Contact",
+        "Contact form",
+        "WhatsApp chat button",
+        "Mobile-friendly design",
+        "Basic SEO setup"
+      ]
+    },
+    {
+      "id": "niche-food",
+      "category": "niche",
+      "label": "Food & Restaurant",
+      "name": "Dropshipping Store: Food & Restaurant",
+      "price": 1000,
+      "emoji": "🍔",
+      "mini": [
+        "🍕",
+        "🥗",
+        "☕"
+      ],
+      "bg": "#FDEBD3",
+      "ink": "#8A4B12"
+    },
+    {
+      "id": "niche-beauty",
+      "category": "niche",
+      "label": "Beauty & Skincare",
+      "name": "Dropshipping Store: Beauty & Skincare",
+      "price": 1000,
+      "emoji": "🧴",
+      "mini": [
+        "💄",
+        "🌸",
+        "✨"
+      ],
+      "bg": "#FBE3EA",
+      "ink": "#9C2F55"
+    },
+    {
+      "id": "niche-fitness",
+      "category": "niche",
+      "label": "Fitness & Activewear",
+      "name": "Dropshipping Store: Fitness & Activewear",
+      "price": 1000,
+      "emoji": "🏋️",
+      "mini": [
+        "👟",
+        "🧘",
+        "💪"
+      ],
+      "bg": "#E2F0FF",
+      "ink": "#1C4E8A"
+    },
+    {
+      "id": "niche-home",
+      "category": "niche",
+      "label": "Home & Kitchen",
+      "name": "Dropshipping Store: Home & Kitchen",
+      "price": 1000,
+      "emoji": "🍳",
+      "mini": [
+        "🪴",
+        "🕯️",
+        "☕"
+      ],
+      "bg": "#EDE8DC",
+      "ink": "#5B4A2E"
+    },
+    {
+      "id": "niche-tech",
+      "category": "niche",
+      "label": "Tech Gadgets",
+      "name": "Dropshipping Store: Tech Gadgets",
+      "price": 1000,
+      "emoji": "🎧",
+      "mini": [
+        "⌚",
+        "🔌",
+        "📱"
+      ],
+      "bg": "#E4E6F2",
+      "ink": "#262B4A"
+    },
+    {
+      "id": "niche-baby",
+      "category": "niche",
+      "label": "Baby & Kids",
+      "name": "Dropshipping Store: Baby & Kids",
+      "price": 1000,
+      "emoji": "🧸",
+      "mini": [
+        "🍼",
+        "🧩",
+        "🎈"
+      ],
+      "bg": "#E6F6F1",
+      "ink": "#1E6B57"
+    },
+    {
+      "id": "niche-fashion",
+      "category": "niche",
+      "label": "Fashion & Accessories",
+      "name": "Dropshipping Store: Fashion & Accessories",
+      "price": 1000,
+      "emoji": "👜",
+      "mini": [
+        "🕶️",
+        "👗",
+        "💍"
+      ],
+      "bg": "#F1E6F7",
+      "ink": "#5E2A7A"
+    },
+    {
+      "id": "niche-car",
+      "category": "niche",
+      "label": "Car Accessories",
+      "name": "Dropshipping Store: Car Accessories",
+      "price": 1000,
+      "emoji": "🚗",
+      "mini": [
+        "🔦",
+        "🧽",
+        "🔧"
+      ],
+      "bg": "#E5ECE8",
+      "ink": "#0B3D2E"
+    },
+    {
+      "id": "add-logo",
+      "category": "addon",
+      "name": "Logo & Branding Pack",
+      "price": 500,
+      "icon": "🎨",
+      "description": "A custom logo, colour palette and fonts so your brand looks pro."
+    },
+    {
+      "id": "add-research",
+      "category": "addon",
+      "name": "Product Research List",
+      "price": 300,
+      "icon": "🔍",
+      "description": "A list of trending, high-margin products for your niche."
+    },
+    {
+      "id": "add-supplier",
+      "category": "addon",
+      "name": "SA Supplier Guide",
+      "price": 400,
+      "icon": "📦",
+      "description": "Trusted local suppliers for faster delivery to SA customers."
+    },
+    {
+      "id": "add-social",
+      "category": "addon",
+      "name": "Social Media Setup",
+      "price": 600,
+      "icon": "📣",
+      "description": "Branded Facebook, Instagram and TikTok business profiles."
+    },
+    {
+      "id": "add-copy",
+      "category": "addon",
+      "name": "Product Copy & Creatives",
+      "price": 100,
+      "unit": "/product",
+      "icon": "✍️",
+      "description": "Persuasive descriptions and polished images that sell."
+    },
+    {
+      "id": "add-payments",
+      "category": "addon",
+      "name": "Payment Gateway Setup",
+      "price": 400,
+      "icon": "💳",
+      "description": "Accept card & instant EFT with PayFast, Yoco or Ozow."
+    },
+    {
+      "id": "add-care",
+      "category": "addon",
+      "name": "Store Maintenance",
+      "price": 300,
+      "unit": "/month",
+      "icon": "🛠️",
+      "description": "Updates, fixes and small changes handled for you monthly."
+    },
+    {
+      "id": "add-seo",
+      "category": "addon",
+      "name": "SEO & Google Business",
+      "price": 800,
+      "icon": "📈",
+      "description": "Get found on Google Search and Maps by local customers."
+    },
+    {
+      "id": "add-guide",
+      "category": "addon",
+      "name": "Starter Guide",
+      "price": 250,
+      "icon": "📘",
+      "description": "A step-by-step playbook to get your first sales."
+    },
+    {
+      "id": "svc-company-reg",
+      "category": "service",
+      "group": "core",
+      "name": "Company Registration",
+      "price": 350,
+      "icon": "🏢",
+      "features": [
+        "CIPC company registration",
+        "Registration documents",
+        "SARS income tax registration / details",
+        "Bank account opening assistance (optional)"
+      ]
+    },
+    {
+      "id": "svc-csd",
+      "category": "service",
+      "group": "core",
+      "name": "CSD Registration",
+      "price": 350,
+      "icon": "🏛️",
+      "features": [
+        "Complete CSD registration",
+        "Supplier registration document"
+      ],
+      "relatedIds": [
+        "svc-csd-update"
+      ]
+    },
+    {
+      "id": "svc-csd-update",
+      "category": "service",
+      "group": "related",
+      "name": "CSD Update",
+      "price": 150,
+      "description": "Banking details, contact details, addresses, commodities and company information."
+    },
+    {
+      "id": "svc-coida",
+      "category": "service",
+      "group": "core",
+      "name": "COIDA Registration",
+      "price": 250,
+      "icon": "🦺",
+      "features": [
+        "We assist with COIDA registration",
+        "We do the annual calculations (Return of Earnings)",
+        "We advise you of the amount payable",
+        "You pay directly to the Compensation Fund",
+        "We retrieve and send your registration certificate"
+      ],
+      "relatedIds": [
+        "svc-coida-roe",
+        "svc-coida-logs"
+      ]
+    },
+    {
+      "id": "svc-coida-roe",
+      "category": "service",
+      "group": "related",
+      "name": "Return of Earnings (ROE)",
+      "price": 250
+    },
+    {
+      "id": "svc-coida-logs",
+      "category": "service",
+      "group": "related",
+      "name": "Letter of Good Standing",
+      "price": 200
+    },
+    {
+      "id": "svc-cidb-g1",
+      "category": "service",
+      "group": "core",
+      "cidbCard": true,
+      "cardTitle": "CIDB Registration",
+      "name": "CIDB Registration (Grade 1)",
+      "optionLabel": "Grade 1",
+      "price": 300,
+      "statFeeNote": "service fee + R450 paid directly to CIDB",
+      "icon": "🏗️",
+      "features": [
+        "Contractor registration application with the CIDB",
+        "Guidance on required supporting documents",
+        "CIDB statutory fees are paid directly to CIDB"
+      ],
+      "optionIds": [
+        "svc-cidb-g1",
+        "svc-cidb-g24"
+      ],
+      "relatedIds": [
+        "svc-cidb-update"
+      ]
+    },
+    {
+      "id": "svc-cidb-g24",
+      "category": "service",
+      "group": "cidb-option",
+      "name": "CIDB Registration (Grades 2 to 4)",
+      "optionLabel": "Grades 2 to 4",
+      "price": 500,
+      "statFeeNote": "service fee + applicable CIDB fee paid directly to CIDB"
+    },
+    {
+      "id": "svc-cidb-update",
+      "category": "service",
+      "group": "related",
+      "name": "CIDB Profile Update",
+      "price": 200
+    },
+    {
+      "id": "svc-bo-filing",
+      "category": "service",
+      "group": "key",
+      "name": "Beneficial Ownership Filing",
+      "price": 200,
+      "icon": "🔐",
+      "description": "CIPC beneficial ownership declaration and filing."
+    },
+    {
+      "id": "svc-annual-return",
+      "category": "service",
+      "group": "key",
+      "name": "CIPC Annual Return Filing",
+      "price": 200,
+      "from": true,
+      "icon": "📅",
+      "description": "Keep your company active by filing annual returns on time."
+    },
+    {
+      "id": "svc-sars-tcs",
+      "category": "service",
+      "group": "key",
+      "name": "SARS Tax Compliance Status (TCS)",
+      "price": 200,
+      "icon": "🧾",
+      "description": "Tax compliance status PIN request and verification setup."
+    },
+    {
+      "id": "svc-sars-update",
+      "category": "service",
+      "group": "key",
+      "name": "SARS Company Details Update",
+      "price": 200,
+      "from": true,
+      "icon": "🔄",
+      "description": "Update registered representative, banking or contact details."
+    },
+    {
+      "id": "svc-cipc-director",
+      "category": "service",
+      "group": "cipc",
+      "name": "Director Changes",
+      "price": 250
+    },
+    {
+      "id": "svc-cipc-address",
+      "category": "service",
+      "group": "cipc",
+      "name": "Company Address Change",
+      "price": 150
+    },
+    {
+      "id": "svc-cipc-contact",
+      "category": "service",
+      "group": "cipc",
+      "name": "Contact Details Update",
+      "price": 100
+    },
+    {
+      "id": "svc-cipc-fye",
+      "category": "service",
+      "group": "cipc",
+      "name": "Financial Year-End Change",
+      "price": 150
+    },
+    {
+      "id": "svc-cipc-nameres",
+      "category": "service",
+      "group": "cipc",
+      "name": "Company Name Reservation",
+      "price": 100
+    },
+    {
+      "id": "svc-cipc-namechg",
+      "category": "service",
+      "group": "cipc",
+      "name": "Company Name Change",
+      "price": 250
+    },
+    {
+      "id": "svc-cipc-dereg",
+      "category": "service",
+      "group": "cipc",
+      "name": "Company Deregistration Assistance",
+      "price": 300
+    },
+    {
+      "id": "svc-cipc-reinstate",
+      "category": "service",
+      "group": "cipc",
+      "name": "Company Reinstatement Assistance",
+      "price": 500,
+      "from": true
+    },
+    {
+      "id": "svc-sup-profile",
+      "category": "service",
+      "group": "support",
+      "name": "Professional Company Profile",
+      "price": 500,
+      "from": true
+    },
+    {
+      "id": "svc-sup-plan",
+      "category": "service",
+      "group": "support",
+      "name": "Business Plan",
+      "price": 800,
+      "from": true
+    },
+    {
+      "id": "svc-tender-check",
+      "category": "service",
+      "group": "support",
+      "name": "Tender Readiness Check",
+      "price": 200
+    },
+    {
+      "id": "svc-sup-tenderdoc",
+      "category": "service",
+      "group": "support",
+      "name": "Tender Document Assistance",
+      "price": 350,
+      "from": true
+    },
+    {
+      "id": "svc-sup-quote",
+      "category": "service",
+      "group": "support",
+      "name": "Quotation Template",
+      "price": 150
+    },
+    {
+      "id": "svc-sup-invoice",
+      "category": "service",
+      "group": "support",
+      "name": "Invoice Template",
+      "price": 150
+    },
+    {
+      "id": "svc-sup-letterhead",
+      "category": "service",
+      "group": "support",
+      "name": "Company Letterhead",
+      "price": 150
+    }
+  ]
+}
