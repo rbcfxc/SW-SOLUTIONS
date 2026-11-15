@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-15T04:24:08.244Z",
+  "updatedAt": "2026-11-15T04:24:41.534Z",
   "settings": {
     "whatsappNumber": "27644997135",
     "whatsappDisplay": "+27 64 499 7135",
@@ -153,7 +153,8 @@
         "About, Contact, Shipping & Refund pages",
         "3 starter products loaded",
         "Quick handover guide to start selling immediately"
-      ]
+      ],
+      "featured": true
     },
     {
       "id": "pkg-bundle",
