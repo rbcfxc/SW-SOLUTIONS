@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-15T04:21:12.289Z",
+  "updatedAt": "2026-11-15T04:21:50.060Z",
   "settings": {
     "whatsappNumber": "27644997135",
     "whatsappDisplay": "+27 64 499 7135",
@@ -8,7 +8,7 @@
     "currency": "R",
     "footerTag": "Ready-made online stores, business websites and Company Consultation for South African entrepreneurs.",
     "announcement": {
-      "enabled": true,
+      "enabled": false,
       "text": "We are currently away, we will be back soon",
       "linkText": "",
       "linkUrl": ""
