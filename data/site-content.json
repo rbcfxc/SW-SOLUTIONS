@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-15T06:56:45.425Z",
+  "updatedAt": "2026-11-15T06:57:50.478Z",
   "settings": {
     "whatsappNumber": "27644997135",
     "whatsappDisplay": "+27 64 499 7135",
@@ -143,7 +143,7 @@
       "id": "pkg-store",
       "category": "package",
       "name": "Dropshipping Store",
-      "price": 1000,
+      "price": 800,
       "icon": "🛍️",
       "description": "A complete, ready-to-launch online store, built and handed over for you.",
       "features": [
@@ -160,7 +160,7 @@
       "id": "pkg-bundle",
       "category": "package",
       "name": "Launch Bundle",
-      "price": 1500,
+      "price": 1200,
       "compareAt": 1900,
       "badge": "Best value",
       "featured": true,
@@ -179,7 +179,7 @@
       "id": "pkg-website",
       "category": "package",
       "name": "Business Website",
-      "price": 2000,
+      "price": 1600,
       "icon": "💼",
       "description": "A custom website for any business: salons, plumbers, caterers, consultants and more.",
       "features": [
