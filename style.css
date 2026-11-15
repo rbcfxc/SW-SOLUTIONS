@@ -991,3 +991,38 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; letter-spacing:
   .section-page { padding: 0 !important; min-height: auto !important; }
   .confirm-card { box-shadow: none !important; border: 1px solid #ccc !important; padding: 1.5rem !important; }
 }
+
+
+/* ---------- 23. Legal pages, terms checkbox, footer legal column ---------- */
+.legal-doc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem 1.4rem; box-shadow: var(--shadow-sm); }
+.legal-head { margin-bottom: 1rem; }
+.legal-head h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); font-weight: 800; }
+.legal-updated { color: var(--muted); font-size: .88rem; margin-bottom: 1.25rem; }
+.legal-doc h2 { font-size: 1.25rem; font-weight: 800; margin: 2rem 0 .7rem; letter-spacing: -0.01em; }
+.legal-doc p { margin-bottom: .85rem; }
+.legal-doc ul, .legal-doc ol { margin: 0 0 1rem 1.3rem; display: grid; gap: .45rem; }
+.legal-doc ul { list-style: disc; }
+.legal-doc ol { list-style: decimal; }
+.legal-doc a { color: var(--green-700); text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+[data-theme="dark"] .legal-doc a { color: var(--accent); }
+.legal-doc code { background: var(--surface-2); padding: .1rem .4rem; border-radius: 6px; font-size: .88em; }
+.legal-callout { border-left: 5px solid var(--accent); background: var(--surface-2); border-radius: var(--radius-sm); padding: .8rem 1.1rem; margin: .5rem 0 1rem; }
+.legal-callout p:last-child, .legal-callout ul:last-child { margin-bottom: 0; }
+.legal-table-wrap { overflow-x: auto; margin: .5rem 0 1.1rem; }
+.legal-doc table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 520px; }
+.legal-doc th, .legal-doc td { text-align: left; vertical-align: top; padding: .65rem .75rem; border: 1px solid var(--border); }
+.legal-doc th { background: var(--surface-2); font-weight: 700; }
+.legal-dl { display: grid; gap: 1rem; }
+.legal-dl dt { font-weight: 700; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.legal-dl dd { margin: .15rem 0 0; }
+.legal-disclaimer-note { margin-top: 2rem; padding-top: 1rem; border-top: 1px dashed var(--border); font-size: .82rem; color: var(--muted); }
+.testimonial-note { text-align: center; margin-top: 1.5rem; font-size: .85rem; color: var(--muted); }
+.testimonial-note a { text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+.terms-accept { margin-top: .25rem; }
+.terms-label { display: flex; align-items: flex-start; gap: .65rem; font-size: .85rem; line-height: 1.45; cursor: pointer; }
+.terms-label input { width: 20px; height: 20px; margin-top: 2px; flex-shrink: 0; accent-color: var(--green-700); cursor: pointer; }
+.terms-label a { text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+@media (min-width: 768px) {
+  .legal-doc { padding: 3rem 3rem; }
+  .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
+}

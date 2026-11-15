@@ -90,7 +90,7 @@ const PRODUCTS = [
     name: 'Dropshipping Store',
     price: 1000,
     icon: '🛍️',
-    description: 'A complete, ready-to-launch online store. Start selling the day you get it.',
+    description: 'A complete, ready-to-launch online store, built and handed over for you.',
     features: [
       'Professional, mobile-friendly design',
       'Homepage & product pages',
@@ -758,10 +758,14 @@ function validateForm() {
     if (!ok) errors.push(label);
   });
 
+  const termsBox = $('#accept-terms');
+  if (termsBox && !termsBox.checked) errors.push('your acceptance of the Terms & Conditions');
+
   const errorEl = $('#form-error');
   if (errors.length) {
     errorEl.textContent = `Please enter ${errors.join(', ')}.`;
-    checks.find(([, ok]) => !ok)[0].focus();
+    const firstBad = checks.find(([, ok]) => !ok);
+    if (firstBad) firstBad[0].focus(); else if (termsBox) termsBox.focus();
     return false;
   }
   errorEl.textContent = '';
