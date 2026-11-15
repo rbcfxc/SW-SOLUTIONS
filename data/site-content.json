@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-15T06:57:50.478Z",
+  "updatedAt": "2026-11-15T06:58:28.766Z",
   "settings": {
     "whatsappNumber": "27644997135",
     "whatsappDisplay": "+27 64 499 7135",
@@ -160,7 +160,7 @@
       "id": "pkg-bundle",
       "category": "package",
       "name": "Launch Bundle",
-      "price": 1200,
+      "price": 1350,
       "compareAt": 1900,
       "badge": "Best value",
       "featured": true,
@@ -179,7 +179,7 @@
       "id": "pkg-website",
       "category": "package",
       "name": "Business Website",
-      "price": 1600,
+      "price": 2000,
       "icon": "💼",
       "description": "A custom website for any business: salons, plumbers, caterers, consultants and more.",
       "features": [
